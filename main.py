@@ -47,16 +47,10 @@ def getContours(img):
             #cv2.putText(imgCropped, str(area), (x+(w//2)-15, y+(h//2)-15), cv2.FONT_HERSHEY_COMPLEX, 0.5,  (0,0,0), 1)
             if objCor >7:
                 color = imgCropped[y+(h//2), x+(w//2)]
-                print(color)
-                if color[0] >= 20 and color[0] <= 205 and color[1] >=115 and color[1] <= 220 and color[2] >= 173 and color[2] <= 230 :
-                    cv2.putText(imgCropped, "Bola branca", 
-                            (x+(w//2)-15, y+(h//2)-15), cv2.FONT_HERSHEY_COMPLEX, 0.5,  (0,0,0), 1)
+                if color[0] >= 120 and color[0] <= 205 and color[1] >=115 and color[1] <= 220 and color[2] >= 173 and color[2] <= 230 :
+                    cv2.putText(imgCropped, "Bola branca", (x+(w//2)-15, y+(h//2)-15), cv2.FONT_HERSHEY_COMPLEX, 0.5,  (0,0,0), 1)
                 else:
-                    cv2.putText(imgCropped, "Bola colorida", 
-                            (x+(w//2)-15, y+(h//2)-15), cv2.FONT_HERSHEY_COMPLEX, 0.5,  (0,0,0), 1)
-            if objCor >2 and objCor<7:
-                cv2.putText(imgCropped, "Taco",  
-                        (x+(w//2)-15, y+(h//2)-15), cv2.FONT_HERSHEY_COMPLEX, 0.5,  (0,0,0), 1)
+                    cv2.putText(imgCropped, "Bola colorida", (x+(w//2)-15, y+(h//2)-15), cv2.FONT_HERSHEY_COMPLEX, 0.5,  (0,0,0), 1)
         elif area > 320 and area < 900:
             cv2.drawContours(imgCropped, i, -1, (0, 0, 172), 1)
             peri = cv2.arcLength(i, True)
@@ -64,16 +58,10 @@ def getContours(img):
             objCor = len(approx)
             x, y, w, h = cv2.boundingRect(approx)
             if objCor >7:
-                cv2.putText(imgCropped, "Buraco",  
-                        (x+(w//2)-15, y+(h//2)-15), cv2.FONT_HERSHEY_COMPLEX, 0.5,  (255,255,255), 1)
-
+                cv2.putText(imgCropped, "Buraco", (x+(w//2)-15, y+(h//2)-15), cv2.FONT_HERSHEY_COMPLEX, 0.5,  (255,255,255), 1)
+        
 def imgProcessing(img):
-    lower = np.array([0, 0, 69])
-    upper = np.array([255, 255, 255])
-    mask = cv2.inRange(img,lower,upper)
-    imgFiltered = cv2.bitwise_and(img,img,mask=mask)
-
-    imgGray = cv2.cvtColor(imgFiltered, cv2.COLOR_BGR2GRAY)
+    imgGray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
     imgBlur = cv2.GaussianBlur(imgGray, (7,7), 2)
     imgCanny = cv2.Canny(imgBlur, 50, 50)
     getContours(imgCanny)
@@ -86,9 +74,8 @@ while True:
     success, frame = cap.read()
     imgRaw = cv2.resize(frame, (frameWidth, frameHeight))
     imgCropped = imgRaw[10:400,50:591]
-    cv2.imwrite("test.png", imgCropped)
     imgProcessed = imgProcessing(imgCropped)
-    finalImg = stackImages(1, [imgRaw, imgCropped])
+    finalImg = stackImages(1, [imgRaw, imgProcessed])
     cv2.imshow("Result", finalImg)
     if cv2.waitKey(3) & 0xFF == ord('q'):
         break
