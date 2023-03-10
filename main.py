@@ -31,41 +31,53 @@ def stackImages(scale,imgArray):
         hor= np.hstack(imgArray)
         ver = hor
     return ver
-
-def getContours(img):
-    contours, hierarchy = cv2.findContours(img, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
-    for i in contours:
-        #Pega a area do contorno: contourArea(contorno)
-        area = cv2.contourArea(i)
-        #Desenha os contornos: drawContours(Imagem, contorno, index do contorno, cor, espessura)
-        if area > 100 and area < 320:
-            cv2.drawContours(imgCropped, i, -1, (0, 0, 172), 1)
-            peri = cv2.arcLength(i, True)
-            approx = cv2.approxPolyDP(i, 0.02*peri, True)
-            objCor = len(approx)
-            x, y, w, h = cv2.boundingRect(approx)
-            #cv2.putText(imgCropped, str(area), (x+(w//2)-15, y+(h//2)-15), cv2.FONT_HERSHEY_COMPLEX, 0.5,  (0,0,0), 1)
-            if objCor >7:
-                color = imgCropped[y+(h//2), x+(w//2)]
-                if color[0] >= 120 and color[0] <= 205 and color[1] >=115 and color[1] <= 220 and color[2] >= 173 and color[2] <= 230 :
-                    cv2.putText(imgCropped, "Bola branca", (x+(w//2)-15, y+(h//2)-15), cv2.FONT_HERSHEY_COMPLEX, 0.5,  (0,0,0), 1)
-                else:
-                    cv2.putText(imgCropped, "Bola colorida", (x+(w//2)-15, y+(h//2)-15), cv2.FONT_HERSHEY_COMPLEX, 0.5,  (0,0,0), 1)
-        elif area > 320 and area < 900:
-            cv2.drawContours(imgCropped, i, -1, (0, 0, 172), 1)
-            peri = cv2.arcLength(i, True)
-            approx = cv2.approxPolyDP(i, 0.02*peri, True)
-            objCor = len(approx)
-            x, y, w, h = cv2.boundingRect(approx)
-            if objCor >7:
-                cv2.putText(imgCropped, "Buraco", (x+(w//2)-15, y+(h//2)-15), cv2.FONT_HERSHEY_COMPLEX, 0.5,  (255,255,255), 1)
         
 def imgProcessing(img):
     imgGray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
     imgBlur = cv2.GaussianBlur(imgGray, (7,7), 2)
     imgCanny = cv2.Canny(imgBlur, 50, 50)
-    getContours(imgCanny)
     return imgCanny
+
+def findTaco(img):
+    imgHSV = cv2.cvtColor(img,cv2.COLOR_BGR2HSV)
+    lower = np.array([82,17,182])
+    upper = np.array([99,88,255])
+    mask = cv2.inRange(imgHSV,lower,upper)
+    imgFiltered = cv2.bitwise_and(img,img,mask=mask)
+    imgProcessed = imgProcessing(imgFiltered)
+    contours, hierarchy = cv2.findContours(imgProcessed, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
+    for i in contours:
+        area = cv2.contourArea(i)
+        if area > 35 and area < 50:
+            cv2.drawContours(imgFiltered, i, -1, (172, 0, 196), 2)
+            peri = cv2.arcLength(i, True)
+            approx = cv2.approxPolyDP(i, 0.02*peri, True)
+            objCor = len(approx)
+            x, y, w, h = cv2.boundingRect(approx)
+            if objCor > 8:
+                cv2.rectangle(imgFiltered, (x, y), (x+w, y+h), (255,255,255), 2)
+                cv2.putText(imgCropped, "Taco", (x+(w//2)-10, y+(h//2)-10), cv2.FONT_HERSHEY_SIMPLEX, 0.6,  (0,0,0), 2)
+
+def findCueBall(img):
+    croppedImg = img[51:349, 31:510]
+    imgHSV = cv2.cvtColor(croppedImg,cv2.COLOR_BGR2HSV)
+    lower = np.array([40,9,107])
+    upper = np.array([72,96,210])
+    mask = cv2.inRange(imgHSV,lower,upper)
+    imgFiltered = cv2.bitwise_and(croppedImg,croppedImg,mask=mask)
+    imgProcessed = imgProcessing(imgFiltered)
+    contours, hierarchy = cv2.findContours(imgProcessed, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
+    for i in contours:
+        area = cv2.contourArea(i)
+        if area > 200 and area < 300:
+            cv2.drawContours(imgFiltered, i, -1, (172, 0, 196), 2)
+            peri = cv2.arcLength(i, True)
+            approx = cv2.approxPolyDP(i, 0.02*peri, True)
+            objCor = len(approx)
+            x, y, w, h = cv2.boundingRect(approx)
+            if objCor >= 8:
+                cv2.putText(imgCropped, "Bola branca", (x+(w//2)+40, y+(h//2)+61), cv2.FONT_HERSHEY_SIMPLEX, 0.5,  (255,255,255), 2)
+    return imgFiltered
 
 frameWidth = 640
 frameHeight = 480
@@ -74,8 +86,10 @@ while True:
     success, frame = cap.read()
     imgRaw = cv2.resize(frame, (frameWidth, frameHeight))
     imgCropped = imgRaw[10:400,50:591]
-    imgProcessed = imgProcessing(imgCropped)
-    finalImg = stackImages(1, [imgRaw, imgProcessed])
+    cv2.imwrite("imgColors.png", imgCropped)
+    findTaco(imgCropped)
+    cueBall = findCueBall(imgCropped)
+    finalImg = stackImages(1, [imgRaw, cueBall])
     cv2.imshow("Result", finalImg)
     if cv2.waitKey(3) & 0xFF == ord('q'):
         break
