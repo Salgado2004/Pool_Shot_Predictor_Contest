@@ -38,23 +38,39 @@ def getContours(img):
         #Pega a area do contorno: contourArea(contorno)
         area = cv2.contourArea(i)
         #Desenha os contornos: drawContours(Imagem, contorno, index do contorno, cor, espessura)
-        if area > 150 and area < 400:
-            cv2.drawContours(imgCropped, i, -1, (0, 0, 172), 2)
+        if area > 100 and area < 320:
+            cv2.drawContours(imgCropped, i, -1, (0, 0, 172), 1)
             peri = cv2.arcLength(i, True)
             approx = cv2.approxPolyDP(i, 0.02*peri, True)
             objCor = len(approx)
             x, y, w, h = cv2.boundingRect(approx)
-            #cv2.rectangle(imgCropped, (x, y), (x+w, y+h), (0, 0, 172), 2)
             #cv2.putText(imgCropped, str(area), (x+(w//2)-15, y+(h//2)-15), cv2.FONT_HERSHEY_COMPLEX, 0.5,  (0,0,0), 1)
             if objCor >7:
-                cv2.putText(imgCropped, "Bola",  
+                color = imgCropped[y+(h//2), x+(w//2)]
+                print(color)
+                if color[0] >= 20 and color[0] <= 205 and color[1] >=115 and color[1] <= 220 and color[2] >= 173 and color[2] <= 230 :
+                    cv2.putText(imgCropped, "Bola branca", 
+                            (x+(w//2)-15, y+(h//2)-15), cv2.FONT_HERSHEY_COMPLEX, 0.5,  (0,0,0), 1)
+                else:
+                    cv2.putText(imgCropped, "Bola colorida", 
+                            (x+(w//2)-15, y+(h//2)-15), cv2.FONT_HERSHEY_COMPLEX, 0.5,  (0,0,0), 1)
+            if objCor >2 and objCor<7:
+                cv2.putText(imgCropped, "Taco",  
                         (x+(w//2)-15, y+(h//2)-15), cv2.FONT_HERSHEY_COMPLEX, 0.5,  (0,0,0), 1)
+        elif area > 320 and area < 900:
+            cv2.drawContours(imgCropped, i, -1, (0, 0, 172), 1)
+            peri = cv2.arcLength(i, True)
+            approx = cv2.approxPolyDP(i, 0.02*peri, True)
+            objCor = len(approx)
+            x, y, w, h = cv2.boundingRect(approx)
+            if objCor >7:
+                cv2.putText(imgCropped, "Buraco",  
+                        (x+(w//2)-15, y+(h//2)-15), cv2.FONT_HERSHEY_COMPLEX, 0.5,  (255,255,255), 1)
 
 def imgProcessing(img):
-    imgHSV = cv2.cvtColor(img,cv2.COLOR_BGR2HSV)
-    lower = np.array([44, 145, 0])
-    upper = np.array([179, 255, 255])
-    mask = cv2.inRange(imgHSV,lower,upper)
+    lower = np.array([0, 0, 69])
+    upper = np.array([255, 255, 255])
+    mask = cv2.inRange(img,lower,upper)
     imgFiltered = cv2.bitwise_and(img,img,mask=mask)
 
     imgGray = cv2.cvtColor(imgFiltered, cv2.COLOR_BGR2GRAY)
