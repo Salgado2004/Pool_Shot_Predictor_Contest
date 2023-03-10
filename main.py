@@ -77,7 +77,6 @@ def findCueBall(img):
             x, y, w, h = cv2.boundingRect(approx)
             if objCor >= 8:
                 cv2.putText(imgCropped, "Bola branca", (x+(w//2)+40, y+(h//2)+61), cv2.FONT_HERSHEY_SIMPLEX, 0.5,  (255,255,255), 2)
-    return imgFiltered
 
 frameWidth = 640
 frameHeight = 480
@@ -88,8 +87,8 @@ while True:
     imgCropped = imgRaw[10:400,50:591]
     cv2.imwrite("imgColors.png", imgCropped)
     findTaco(imgCropped)
-    cueBall = findCueBall(imgCropped)
-    finalImg = stackImages(1, [imgRaw, cueBall])
-    cv2.imshow("Result", finalImg)
+    findCueBall(imgCropped)
+    #finalImg = stackImages(1, [imgRaw, cueBall])
+    cv2.imshow("Result", imgRaw)
     if cv2.waitKey(3) & 0xFF == ord('q'):
         break
