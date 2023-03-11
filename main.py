@@ -82,8 +82,8 @@ def findCueBall(img):
 
 def findColoredBalls(img):
     kernel = np.ones((5,5),np.uint8)
-    lowerValues = [[13,133,132], [74, 33, 71], [62, 69, 37], [82, 71, 72], [0, 98, 70], [61, 36, 70], [40,9,107], [0, 0, 0]]
-    upperValues = [[66,255,255], [123, 255, 255], [76,240,255], [125, 255, 255], [17, 255, 255], [79, 232, 255], [72,96,210], [179, 255, 255]]
+    lowerValues = [[13,133,132], [74, 33, 71], [61, 36, 70], [82, 71, 72], [0, 98, 70], [61, 36, 70], [120,53,116], [0, 0, 0]]
+    upperValues = [[66,255,255], [123, 255, 255], [79, 232, 255], [125, 255, 255], [17, 255, 255], [79, 232, 255], [179,255,255], [179, 255, 255]]
     filteredImgs = []
     for x in range(8):
         lower = np.array(lowerValues[x])
@@ -92,6 +92,7 @@ def findColoredBalls(img):
     for f_img in filteredImgs:
         imgProcessed = imgProcessing(f_img)
         ballCount = 0
+        foundBalls = []
         dial = cv2.dilate(imgProcessed, kernel, iterations=1)
         thres = cv2.erode(dial, kernel, iterations=1)
         contours, hierarchy = cv2.findContours(thres, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
@@ -107,9 +108,12 @@ def findColoredBalls(img):
                 #cv2.putText(f_img, f"{objCor}", (x+(w//2)+10, y+(h//2)+10), cv2.FONT_HERSHEY_COMPLEX, 0.8,  (255,255,255), 1)
                 if objCor > 6 and objCor < 14:
                     ballCount += 1
+                    foundBalls.append([x, y, w, h])
                     cv2.putText(f_img, "Bola", (x+(w//2)-10, y+(h//2)-10), cv2.FONT_HERSHEY_COMPLEX, 0.8,  (255,255,255), 1)
         cv2.putText(f_img, f"Ball count: {ballCount}", (15, 25), cv2.FONT_HERSHEY_SIMPLEX, 0.9,  (255,255,255), 2)
-    
+        if ballCount == 1:
+            x, y, w, h = foundBalls[0][0], foundBalls[0][1], foundBalls[0][2], foundBalls[0][3]
+            cv2.putText(imgCropped, "Bola", (x+(w//2)-10, y+(h//2)-10), cv2.FONT_HERSHEY_SIMPLEX, 0.5,  (0,0,255), 1)
     coloredBalls = stackImages(0.6, [[filteredImgs[0], filteredImgs[1], filteredImgs[2], filteredImgs[3]], [filteredImgs[4], filteredImgs[5], filteredImgs[6], filteredImgs[7]]])
     return coloredBalls
 
@@ -125,6 +129,6 @@ while True:
     findCueBall(imgCropped)
     coloredBalls = findColoredBalls(imgCropped)
     #finalImg = stackImages(1, [imgRaw, coloredBalls])
-    cv2.imshow("Result", coloredBalls)
+    cv2.imshow("Result", imgRaw)
     if cv2.waitKey(5) & 0xFF == ord('q'):
         break
