@@ -81,10 +81,37 @@ def findCueBall(img):
                 cv2.putText(imgCropped, "Bola branca", (x+(w//2)+40, y+(h//2)+61), cv2.FONT_HERSHEY_SIMPLEX, 0.5,  (255,255,255), 2)
 
 def findColoredBalls(img):
-    lower = np.array([13,133,132])
-    upper = np.array([66,255,255])
-    imgFiltered = colorFilter(img, lower, upper)
-    return imgFiltered
+    kernel = np.ones((5,5),np.uint8)
+    lowerValues = [[13,133,132], [74, 33, 71], [62, 69, 37], [82, 71, 72], [0, 98, 70], [61, 36, 70], [40,9,107], [0, 0, 0]]
+    upperValues = [[66,255,255], [123, 255, 255], [76,240,255], [125, 255, 255], [17, 255, 255], [79, 232, 255], [72,96,210], [179, 255, 255]]
+    filteredImgs = []
+    for x in range(8):
+        lower = np.array(lowerValues[x])
+        upper = np.array(upperValues[x])
+        filteredImgs.append(colorFilter(img, lower, upper))
+    for f_img in filteredImgs:
+        imgProcessed = imgProcessing(f_img)
+        ballCount = 0
+        dial = cv2.dilate(imgProcessed, kernel, iterations=1)
+        thres = cv2.erode(dial, kernel, iterations=1)
+        contours, hierarchy = cv2.findContours(thres, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
+        for i in contours:
+            area = cv2.contourArea(i)
+            if area > 100 and area < 350:
+                cv2.drawContours(f_img, i, -1, (172, 0, 196), 1)
+                peri = cv2.arcLength(i, True)
+                approx = cv2.approxPolyDP(i, 0.02*peri, True)
+                objCor = len(approx)
+                x, y, w, h = cv2.boundingRect(approx)
+                #cv2.putText(f_img, f"{area}", (x+(w//2)+10, y+(h//2)-10), cv2.FONT_HERSHEY_COMPLEX, 0.8,  (255,255,255), 1)
+                #cv2.putText(f_img, f"{objCor}", (x+(w//2)+10, y+(h//2)+10), cv2.FONT_HERSHEY_COMPLEX, 0.8,  (255,255,255), 1)
+                if objCor > 6 and objCor < 14:
+                    ballCount += 1
+                    cv2.putText(f_img, "Bola", (x+(w//2)-10, y+(h//2)-10), cv2.FONT_HERSHEY_COMPLEX, 0.8,  (255,255,255), 1)
+        cv2.putText(f_img, f"Ball count: {ballCount}", (15, 25), cv2.FONT_HERSHEY_SIMPLEX, 0.9,  (255,255,255), 2)
+    
+    coloredBalls = stackImages(0.6, [[filteredImgs[0], filteredImgs[1], filteredImgs[2], filteredImgs[3]], [filteredImgs[4], filteredImgs[5], filteredImgs[6], filteredImgs[7]]])
+    return coloredBalls
 
 frameWidth = 640
 frameHeight = 480
@@ -96,8 +123,8 @@ while True:
     cv2.imwrite("imgColors.png", imgCropped)
     findTaco(imgCropped)
     findCueBall(imgCropped)
-    coloredBall = findColoredBalls(imgCropped)
-    finalImg = stackImages(1, [imgRaw, coloredBall])
-    cv2.imshow("Result", finalImg)
+    coloredBalls = findColoredBalls(imgCropped)
+    #finalImg = stackImages(1, [imgRaw, coloredBalls])
+    cv2.imshow("Result", coloredBalls)
     if cv2.waitKey(5) & 0xFF == ord('q'):
         break
