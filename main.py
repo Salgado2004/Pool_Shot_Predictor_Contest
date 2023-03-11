@@ -137,6 +137,7 @@ def dottedLine(img,pt1,pt2,color):
         pts.append(p)
     for p in pts:
             cv2.circle(img,p,2,color,-1)
+            #cv2.putText(img, f"{p}", p, cv2.FONT_HERSHEY_PLAIN, 0.5, (0,0,0))
 
 def trajectoriaPrediction(taco, cueBall, coloredBalls):
     try:
@@ -151,12 +152,18 @@ def trajectoriaPrediction(taco, cueBall, coloredBalls):
 
         #Colored ball to hole
         m2, n2 = lineEquation([x1, y1], [coloredBalls[0]+coloredBalls[2]//2, coloredBalls[1]+coloredBalls[3]//2])
-        xList = [pt for pt in range(30,515,5)]
-        yList = []
-        for x in xList:
-            yList.append(int((m2*x) + n2))
-        for (x, y) in zip(xList, yList):
-            cv2.circle(imgCropped, (x, y), 2, (0,0,255), cv2.FILLED)
+        if cueBall[0] < coloredBalls[0]:
+            x2 = 505
+        else:
+            x2 = 26
+        y2 = int((m2*x2) + n2)
+        if y2 > 346:
+            y2 = 346
+            x2 = int((346-n2)/m2)
+        elif y2 < 51:
+            y2 = 51
+            x2 = int((51-n2)/m2)
+        dottedLine(imgCropped, (x1, y1), (x2, y2), (0,0,150))
 
     except TypeError:
         pass
@@ -175,6 +182,6 @@ while True:
     coloredBalls = findColoredBalls(imgCropped)
     trajectoriaPrediction(taco, cueBall, coloredBalls)
     #finalImg = stackImages(1, [imgRaw, coloredBalls])
-    cv2.imshow("Result", imgRaw)
-    if cv2.waitKey(10) & 0xFF == ord('q'):
+    cv2.imshow("Result", imgCropped)
+    if cv2.waitKey(20) & 0xFF == ord('q'):
         break
