@@ -45,26 +45,30 @@ def imgProcessing(img):
     return imgCanny
 
 def findTaco(img):
-    lower = np.array([82,17,182])
-    upper = np.array([99,88,255])
+    lower = np.array([79,36,168])
+    upper = np.array([98,255,217])
     imgFiltered = colorFilter(img, lower, upper)
     imgProcessed = imgProcessing(imgFiltered)
     contours, hierarchy = cv2.findContours(imgProcessed, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
     for i in contours:
         area = cv2.contourArea(i)
-        if area > 35 and area < 50:
+        if area > 15 and area < 65:
             cv2.drawContours(imgFiltered, i, -1, (172, 0, 196), 2)
             peri = cv2.arcLength(i, True)
             approx = cv2.approxPolyDP(i, 0.02*peri, True)
             objCor = len(approx)
             x, y, w, h = cv2.boundingRect(approx)
-            if objCor > 8:
-                cv2.rectangle(imgFiltered, (x, y), (x+w, y+h), (255,255,255), 2)
-                cv2.putText(imgCropped, "Taco", (x+(w//2)-10, y+(h//2)-10), cv2.FONT_HERSHEY_SIMPLEX, 0.4,  (0,0,0), 1)
-                return [x, y, w, h]
+            cv2.putText(imgFiltered, f"{w}, {h}" ,(x+w//2, y+h//2-10),cv2.FONT_HERSHEY_COMPLEX, 0.7, (255,255,255), 1)
+            cv2.putText(imgFiltered, f"{area}" ,(x+w//2, y+h//2+15),cv2.FONT_HERSHEY_COMPLEX, 0.7, (255,255,255), 1)
+            if objCor > 2:
+                if w < 15 and w > 6 and h < 15 and h > 6:
+                    cv2.rectangle(imgFiltered, (x, y), (x+w, y+h), (255,255,255), 2)
+                    cv2.putText(imgCropped, "Taco", (x+(w//2)-10, y+(h//2)-10), cv2.FONT_HERSHEY_SIMPLEX, 0.4,  (0,0,0), 1)
+                    return [x, y, w, h]
+    #return imgFiltered
 
 def findCueBall(img):
-    croppedImg = img[51:349, 31:510]
+    croppedImg = img[56:383, 38:757]
     lower = np.array([40,9,107])
     upper = np.array([72,96,210])
     imgFiltered = colorFilter(croppedImg, lower, upper)
@@ -72,7 +76,7 @@ def findCueBall(img):
     contours, hierarchy = cv2.findContours(imgProcessed, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
     for i in contours:
         area = cv2.contourArea(i)
-        if area > 200 and area < 300:
+        if area > 400 and area < 500:
             cv2.drawContours(imgFiltered, i, -1, (172, 0, 196), 2)
             peri = cv2.arcLength(i, True)
             approx = cv2.approxPolyDP(i, 0.02*peri, True)
@@ -100,24 +104,27 @@ def findColoredBalls(img):
         contours, hierarchy = cv2.findContours(thres, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
         for i in contours:
             area = cv2.contourArea(i)
-            if area > 100 and area < 350:
+            if area > 50 and area < 520:
                 cv2.drawContours(f_img, i, -1, (172, 0, 196), 1)
                 peri = cv2.arcLength(i, True)
                 approx = cv2.approxPolyDP(i, 0.02*peri, True)
                 objCor = len(approx)
                 x, y, w, h = cv2.boundingRect(approx)
-                #cv2.putText(f_img, f"{area}", (x+(w//2)+10, y+(h//2)-10), cv2.FONT_HERSHEY_COMPLEX, 0.8,  (255,255,255), 1)
-                #cv2.putText(f_img, f"{objCor}", (x+(w//2)+10, y+(h//2)+10), cv2.FONT_HERSHEY_COMPLEX, 0.8,  (255,255,255), 1)
-                if objCor > 6 and objCor < 14:
-                    ballCount += 1
-                    foundBalls.append([x, y, w, h])
-                    #cv2.putText(f_img, "Bola", (x+(w//2)-10, y+(h//2)-10), cv2.FONT_HERSHEY_COMPLEX, 0.8,  (255,255,255), 1)
+                if objCor > 7 and objCor < 14:
+                    #cv2.putText(f_img, f"{w}", (x, y-15), cv2.FONT_HERSHEY_TRIPLEX, 0.9, (255,255,255), 1)
+                    #cv2.putText(f_img, f"{h}", (x+w, y+(h//2)+15), cv2.FONT_HERSHEY_TRIPLEX, 0.9, (255,255,255), 1)
+                    if h > 15 and h < 37 and w > 15 and w < 37 and (w-h) > -5.1 and (w-h) < 5.1:
+                        cv2.circle(f_img, (x+w//2,y+h//2), (w//2), (255,255,0), 2)
+                        ballCount += 1
+                        foundBalls.append([x, y, w, h])
+                        cv2.putText(f_img, "Bola", (x+(w//2)-10, y+(h//2)-10), cv2.FONT_HERSHEY_COMPLEX, 0.8,  (255,255,255), 1)
         cv2.putText(f_img, f"Ball count: {ballCount}", (15, 25), cv2.FONT_HERSHEY_SIMPLEX, 0.9,  (255,255,255), 2)
         if ballCount == 1:
             x, y, w, h = foundBalls[0][0], foundBalls[0][1], foundBalls[0][2], foundBalls[0][3]
             cv2.putText(imgCropped, "Bola", (x+(w//2)-10, y+(h//2)-10), cv2.FONT_HERSHEY_SIMPLEX, 0.4,  (0,0,255), 1)
             return foundBalls[0]
-    coloredBalls = stackImages(0.6, [[filteredImgs[0], filteredImgs[1], filteredImgs[2], filteredImgs[3]], [filteredImgs[4], filteredImgs[5], filteredImgs[6], filteredImgs[7]]])
+    coloredBalls = stackImages(0.4, [[filteredImgs[0], filteredImgs[1], filteredImgs[2], filteredImgs[3]], [filteredImgs[4], filteredImgs[5], filteredImgs[6], filteredImgs[7]]])
+    #return coloredBalls
 
 def lineEquation(point1, point2):
     x1, y1 = point1[0], point1[1]
@@ -136,19 +143,19 @@ def dottedLine(img,pt1,pt2,color):
         p = (x,y)
         pts.append(p)
     for p in pts:
-            cv2.circle(img,p,2,color,-1)
+            cv2.circle(img,p,3,color,-1)
             #cv2.putText(img, f"{p}", p, cv2.FONT_HERSHEY_PLAIN, 0.5, (0,0,0))
 
 def trajectoriaPrediction(taco, cueBall, coloredBalls):
     try:
         #cv2.line(imgCropped, (taco[0]+taco[2]//2, taco[1]+taco[3]//2), (cueBall[0]+cueBall[2]//2, cueBall[1]+cueBall[3]//2), (255,0,0), 2)
-        
+        cv2.circle(imgCropped, (cueBall[0]+cueBall[2]//2, cueBall[1]+cueBall[3]//2), cueBall[0]+cueBall[2]//2, (200,0,200), 1)
         #Cue ball to colored ball
         m1, n1 = lineEquation([taco[0]+taco[2]//2, taco[1]+taco[3]//2], [cueBall[0]+cueBall[2]//2, cueBall[1]+cueBall[3]//2])
         x1 = (coloredBalls[0]+coloredBalls[2]//2)+1
         y1 = int((m1*x1) + n1)
-        dottedLine(imgCropped, (cueBall[0]+cueBall[2]//2, cueBall[1]+cueBall[3]//2), (x1, y1), (0,200,0))
-        cv2.circle(imgCropped, (x1, y1), 5, (0,255,0), cv2.FILLED)
+        dottedLine(imgCropped, (cueBall[0]+cueBall[2]//2, cueBall[1]+cueBall[3]//2), (x1, y1), (200,200,200))
+        cv2.circle(imgCropped, (x1, y1), 5, (200,200,200), cv2.FILLED)
 
         #Colored ball to hole
         m2, n2 = lineEquation([x1, y1], [coloredBalls[0]+coloredBalls[2]//2, coloredBalls[1]+coloredBalls[3]//2])
@@ -169,19 +176,20 @@ def trajectoriaPrediction(taco, cueBall, coloredBalls):
         pass
 
 
-frameWidth = 640
-frameHeight = 480
+frameWidth = 960
+frameHeight = 540
 cap = cv2.VideoCapture("resources/shots.mp4")
 while True:
     success, frame = cap.read()
     imgRaw = cv2.resize(frame, (frameWidth, frameHeight))
-    imgCropped = imgRaw[10:400,50:591]
+    imgCropped = imgRaw[10:460,80:881]
     cv2.imwrite("imgColors.png", imgCropped)
     taco = findTaco(imgCropped)
     cueBall = findCueBall(imgCropped)
     coloredBalls = findColoredBalls(imgCropped)
-    trajectoriaPrediction(taco, cueBall, coloredBalls)
-    #finalImg = stackImages(1, [imgRaw, coloredBalls])
+    #filterImg = findColoredBalls(imgCropped)
+    #trajectoriaPrediction(taco, cueBall, coloredBalls)
+    #finalImg = stackImages(0.7, [imgCropped, taco])
     cv2.imshow("Result", imgCropped)
     if cv2.waitKey(20) & 0xFF == ord('q'):
         break
