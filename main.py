@@ -84,7 +84,7 @@ def findCueBall(img):
             x, y, w, h = cv2.boundingRect(approx)
             if objCor >= 8:
                 cv2.putText(imgCropped, "Bola branca", (x+(w//2)+40, y+(h//2)+61), cv2.FONT_HERSHEY_SIMPLEX, 0.4,  (255,255,255), 1)
-                return [x+31, y+51, w, h]
+                return [x+38, y+56, w, h]
 
 def findColoredBalls(img):
     kernel = np.ones((5,5),np.uint8)
@@ -149,7 +149,7 @@ def dottedLine(img,pt1,pt2,color):
 def trajectoriaPrediction(taco, cueBall, coloredBalls):
     try:
         #cv2.line(imgCropped, (taco[0]+taco[2]//2, taco[1]+taco[3]//2), (cueBall[0]+cueBall[2]//2, cueBall[1]+cueBall[3]//2), (255,0,0), 2)
-        cv2.circle(imgCropped, (cueBall[0]+cueBall[2]//2, cueBall[1]+cueBall[3]//2), cueBall[0]+cueBall[2]//2, (200,0,200), 1)
+        
         #Cue ball to colored ball
         m1, n1 = lineEquation([taco[0]+taco[2]//2, taco[1]+taco[3]//2], [cueBall[0]+cueBall[2]//2, cueBall[1]+cueBall[3]//2])
         x1 = (coloredBalls[0]+coloredBalls[2]//2)+1
@@ -188,7 +188,7 @@ while True:
     cueBall = findCueBall(imgCropped)
     coloredBalls = findColoredBalls(imgCropped)
     #filterImg = findColoredBalls(imgCropped)
-    #trajectoriaPrediction(taco, cueBall, coloredBalls)
+    trajectoriaPrediction(taco, cueBall, coloredBalls)
     #finalImg = stackImages(0.7, [imgCropped, taco])
     cv2.imshow("Result", imgCropped)
     if cv2.waitKey(20) & 0xFF == ord('q'):
