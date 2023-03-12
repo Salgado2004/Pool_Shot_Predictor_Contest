@@ -87,6 +87,7 @@ def findCueBall(img):
                 return [x+38, y+56, w, h]
 
 def findColoredBalls(img):
+    croppedImg = img[98:383, 38:770]
     kernel = np.ones((5,5),np.uint8)
     lowerValues = [[13,133,132], [74, 33, 71], [61, 36, 70], [82, 71, 72], [0, 98, 70], [61, 36, 70], [120,53,116], [0, 0, 0]]
     upperValues = [[66,255,255], [123, 255, 255], [79, 232, 255], [125, 255, 255], [17, 255, 255], [79, 232, 255], [179,255,255], [179, 255, 255]]
@@ -94,7 +95,7 @@ def findColoredBalls(img):
     for x in range(8):
         lower = np.array(lowerValues[x])
         upper = np.array(upperValues[x])
-        filteredImgs.append(colorFilter(img, lower, upper))
+        filteredImgs.append(colorFilter(croppedImg, lower, upper))
     for f_img in filteredImgs:
         imgProcessed = imgProcessing(f_img)
         ballCount = 0
@@ -113,7 +114,7 @@ def findColoredBalls(img):
                 if objCor > 7 and objCor < 14:
                     #cv2.putText(f_img, f"{w}", (x, y-15), cv2.FONT_HERSHEY_TRIPLEX, 0.9, (255,255,255), 1)
                     #cv2.putText(f_img, f"{h}", (x+w, y+(h//2)+15), cv2.FONT_HERSHEY_TRIPLEX, 0.9, (255,255,255), 1)
-                    if h > 15 and h < 37 and w > 15 and w < 37 and (w-h) > -5.1 and (w-h) < 5.1:
+                    if h > 15 and h < 38 and w > 15 and w < 38 and (w-h) > -7 and (w-h) < 7:
                         cv2.circle(f_img, (x+w//2,y+h//2), (w//2), (255,255,0), 2)
                         ballCount += 1
                         foundBalls.append([x, y, w, h])
@@ -121,9 +122,9 @@ def findColoredBalls(img):
         cv2.putText(f_img, f"Ball count: {ballCount}", (15, 25), cv2.FONT_HERSHEY_SIMPLEX, 0.9,  (255,255,255), 2)
         if ballCount == 1:
             x, y, w, h = foundBalls[0][0], foundBalls[0][1], foundBalls[0][2], foundBalls[0][3]
-            cv2.putText(imgCropped, "Bola", (x+(w//2)-10, y+(h//2)-10), cv2.FONT_HERSHEY_SIMPLEX, 0.4,  (0,0,255), 1)
-            return foundBalls[0]
-    coloredBalls = stackImages(0.4, [[filteredImgs[0], filteredImgs[1], filteredImgs[2], filteredImgs[3]], [filteredImgs[4], filteredImgs[5], filteredImgs[6], filteredImgs[7]]])
+            cv2.putText(imgCropped, "Bola", (x+(w//2)+28, y+(h//2)+88), cv2.FONT_HERSHEY_SIMPLEX, 0.4,  (0,0,255), 1)
+            return [x+38, y+98, w, h]
+    coloredBalls = stackImages(0.46, [[filteredImgs[0], filteredImgs[1], filteredImgs[2], filteredImgs[3]], [filteredImgs[4], filteredImgs[5], filteredImgs[6], filteredImgs[7]]])
     #return coloredBalls
 
 def lineEquation(point1, point2):
@@ -158,7 +159,7 @@ def trajectoriaPrediction(taco, cueBall, coloredBalls):
         cv2.circle(imgCropped, (x1, y1), 5, (200,200,200), cv2.FILLED)
 
         #Colored ball to hole
-        m2, n2 = lineEquation([x1, y1], [coloredBalls[0]+coloredBalls[2]//2, coloredBalls[1]+coloredBalls[3]//2])
+        """ m2, n2 = lineEquation([x1, y1], [coloredBalls[0]+coloredBalls[2]//2, coloredBalls[1]+coloredBalls[3]//2])
         if cueBall[0] < coloredBalls[0]:
             x2 = 505
         else:
@@ -170,7 +171,7 @@ def trajectoriaPrediction(taco, cueBall, coloredBalls):
         elif y2 < 51:
             y2 = 51
             x2 = int((51-n2)/m2)
-        dottedLine(imgCropped, (x1, y1), (x2, y2), (0,0,150))
+        dottedLine(imgCropped, (x1, y1), (x2, y2), (0,0,150)) """
 
     except TypeError:
         pass
