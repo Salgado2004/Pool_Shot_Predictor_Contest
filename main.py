@@ -149,7 +149,10 @@ def findColoredBalls(img):
 def lineEquation(point1, point2):
     x1, y1 = point1[0], point1[1]
     x2, y2 = point2[0], point2[1]
-    m = (y2-y1)/(x2-x1)
+    try:
+        m = (y2-y1)/(x2-x1)
+    except ZeroDivisionError:
+        m = 0
     n = y1-(m*x1)
     return m, n
 
@@ -190,26 +193,16 @@ def detectCollision(cueBall, coloredBall):
         pY = int(seno*radius)
         coloredBallList.append([oX+pX, oY+pY])
 
-    collisionPoints = []
     for point in cueBallList:
         if point in coloredBallList:
-            collisionPoints.append(point)
-
-    if len(collisionPoints) > 0:
-        xPt = 0
-        yPt = 0
-        for point in collisionPoints:
-            xPt += point[0]
-            yPt += point[1]
-        collisionPt = [xPt//len(collisionPoints), yPt//len(collisionPoints)]
-        cv2.circle(imgCropped, (collisionPt[0], collisionPt[1]), 8, (0,200,200), cv2.FILLED)
-        return True, collisionPt
+            cv2.circle(imgCropped, (point[0], point[1]), 8, (0,200,200), cv2.FILLED)
+            return True, point
     return False, []
 
 def pathPrediction(collisionPoint, coloredBall):
     # Colored ball path
     ballCenter = [coloredBall[0]+coloredBall[2]//2, coloredBall[1]+coloredBall[3]//2]
-    m2, n2 = lineEquation(collisionPoint, [ballCenter[0]+1, ballCenter[1]+1])
+    m2, n2 = lineEquation(collisionPoint, [ballCenter[0]-1, ballCenter[1]-1])
     
     paths = []
     paths.append(ballCenter)
@@ -243,10 +236,10 @@ def pathPrediction(collisionPoint, coloredBall):
             cv2.circle(imgCropped, (path[0], path[1]), 10, color, cv2.FILLED)
     if inHole:
         cv2.rectangle(imgCropped, (80, 395), (280,440), color, cv2.FILLED)
-        cv2.putText(imgCropped, "Prediction: In", (85, 425), cv2.FONT_HERSHEY_TRIPLEX, 0.7, (200,200,200), 1)
+        cv2.putText(imgCropped, "Prediction: In", (85, 425), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (200,200,200), 2)
     else:
         cv2.rectangle(imgCropped, (80, 395), (280,440), color, cv2.FILLED)
-        cv2.putText(imgCropped, "Prediction: Out", (85, 425), cv2.FONT_HERSHEY_TRIPLEX, 0.7, (200,200,200), 1)
+        cv2.putText(imgCropped, "Prediction: Out", (85, 425), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (200,200,200), 2)
 
 # Control all the calculations used for the prediction
 def trajectoriaPrediction(taco, cueBall, coloredBalls):
