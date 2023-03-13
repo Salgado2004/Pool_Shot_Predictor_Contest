@@ -188,6 +188,26 @@ def detectCollision(cueBall, coloredBall):
         return True, collisionPt
     return False, []
 
+def pathPrediction(collisionPoint, coloredBall):
+    # Colored ball path
+    ballCenter = [coloredBall[0]+coloredBall[2]//2, coloredBall[1]+coloredBall[3]//2]
+    m2, n2 = lineEquation(collisionPoint, [ballCenter[0]+1, ballCenter[1]+1])
+    
+    if collisionPoint[0] > coloredBall[0]+coloredBall[2]//2:
+        x2 = 30
+    else:
+        x2 = 790
+    y2 = int((m2*x2)+n2)
+    if y2 > 395:
+        y2 = 395
+        x2 = int((y2-n2)/m2)
+    if y2 < 60:
+        y2 = 60
+        x2 = int((y2-n2)/m2)
+    dottedLine(imgCropped, (ballCenter[0], ballCenter[1]), (x2, y2),  (0,200,0))
+
+    
+
 # Control all the calculations used for the prediction
 def trajectoriaPrediction(taco, cueBall, coloredBalls):
     try:
@@ -210,6 +230,7 @@ def trajectoriaPrediction(taco, cueBall, coloredBalls):
             collision, collisionPoint = detectCollision(bbox, [coloredBalls[0],coloredBalls[1], coloredBalls[0]+coloredBalls[2], coloredBalls[1]+coloredBalls[3]])
             if collision:
                 x1, y1 = collisionPoint[0], collisionPoint[1]
+                pathPrediction(collisionPoint, coloredBalls)
                 break
 
         dottedLine(imgCropped, (cueBall[0]+cueBall[2]//2, cueBall[1]+cueBall[3]//2), (x1, y1), (200,200,200))
@@ -230,12 +251,12 @@ while True:
     # Detect the objects 
     taco = findTaco(imgCropped)
     cueBall = findCueBall(imgCropped)
-    coloredBalls = findColoredBalls(imgCropped)
-    #filterImg = findColoredBalls(imgCropped)
+    #coloredBalls = findColoredBalls(imgCropped)
+    filterImg = findColoredBalls(imgCropped)
 
     # Start the calculations
-    trajectoriaPrediction(taco, cueBall, coloredBalls)
+    #trajectoriaPrediction(taco, cueBall, coloredBalls)
     #finalImg = stackImages(0.7, [imgCropped, taco])
-    cv2.imshow("Result", imgCropped)
+    cv2.imshow("Result", filterImg)
     if cv2.waitKey(75) & 0xFF == ord('q'):
         break
