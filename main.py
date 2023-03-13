@@ -218,26 +218,35 @@ def pathPrediction(collisionPoint, coloredBall):
     else:
         x2 = 790
     y2 = int((m2*x2)+n2)
-    if y2 > 395:
-        y2 = 395
-        x3 = x2
+
+    color = (0,0,200)
+    inHole = False
+    if y2 >= 390:
+        y2 = 390
         x2 = int((y2-n2)/m2)
-        y3 = int(((-m2)*x3)+n2)
-        paths.append([x2, y2])
-        paths.append([x3,y3])
-    if y2 < 60:
+        if x2 <= 61 and x2 >= 20 or x2 <= 414 and x2 >= 362 or x2 <= 770 and x2 >= 718:
+            color = (0,200,0)
+            inHole = True
+    if y2 <= 60:
         y2 = 60
-        x3 = x2
         x2 = int((y2-n2)/m2)
-        y3 = int(((-m2)*x3)+n2)
-        paths.append([x2, y2])
-        paths.append([x3,y3])
+        if x2 <= 61 and x2 >= 20 or x2 <= 414 and x2 >= 362 or x2 <= 770 and x2 >= 718:
+            color = (0,200,0)
+            inHole = True
     paths.append([x2, y2])
+    
     for i, path in enumerate(paths):
         if i == 0:
             pass
         else:
-            dottedLine(imgCropped, (paths[i-1][0], paths[i-1][1]), (path[0], path[1]),  (0,200,0))
+            dottedLine(imgCropped, (paths[i-1][0], paths[i-1][1]), (path[0], path[1]),  color)
+            cv2.circle(imgCropped, (path[0], path[1]), 10, color, cv2.FILLED)
+    if inHole:
+        cv2.rectangle(imgCropped, (80, 395), (280,440), color, cv2.FILLED)
+        cv2.putText(imgCropped, "Prediction: In", (85, 425), cv2.FONT_HERSHEY_TRIPLEX, 0.7, (200,200,200), 1)
+    else:
+        cv2.rectangle(imgCropped, (80, 395), (280,440), color, cv2.FILLED)
+        cv2.putText(imgCropped, "Prediction: Out", (85, 425), cv2.FONT_HERSHEY_TRIPLEX, 0.7, (200,200,200), 1)
 
 # Control all the calculations used for the prediction
 def trajectoriaPrediction(taco, cueBall, coloredBalls):
