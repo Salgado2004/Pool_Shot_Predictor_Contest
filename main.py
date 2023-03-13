@@ -91,7 +91,7 @@ def findCueBall(img):
 
 # Function to find the position of the colored balls
 def findColoredBalls(img):
-    croppedImg = img[98:383, 38:770]
+    croppedImg = img[110:375, 38:770]
     kernel = np.ones((5,5),np.uint8)
     lowerValues = [[13,133,132], [74, 33, 71], [61, 36, 70], [82, 71, 72], [0, 98, 70], [61, 36, 70], [120,53,116], [0, 0, 0]]
     upperValues = [[66,255,255], [123, 255, 255], [79, 232, 255], [125, 255, 255], [17, 255, 255], [79, 232, 255], [179,255,255], [179, 255, 255]]
@@ -127,9 +127,9 @@ def findColoredBalls(img):
         if ballCount == 1:
             x, y, w, h = foundBalls[0][0], foundBalls[0][1], foundBalls[0][2], foundBalls[0][3]
             cv2.putText(imgCropped, "Bola", (x+(w//2)+28, y+(h//2)+88), cv2.FONT_HERSHEY_SIMPLEX, 0.4,  (0,0,255), 1)
-            return [x+38, y+98, w, h]
+            #return [x+38, y+110, w, h]
     coloredBalls = stackImages(0.46, [[filteredImgs[0], filteredImgs[1], filteredImgs[2], filteredImgs[3]], [filteredImgs[4], filteredImgs[5], filteredImgs[6], filteredImgs[7]]])
-    #return coloredBalls
+    return coloredBalls
 
 # Function to calculate de line between two points
 def lineEquation(point1, point2):
