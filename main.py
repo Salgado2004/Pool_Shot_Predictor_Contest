@@ -58,6 +58,30 @@ def imgProcessing(img):
     imgCanny = cv2.Canny(imgBlur, 50, 50)
     return imgCanny
 
+# Function to calculate the position of the holes
+def findHoles():
+    midPoints = [
+        [41, 66, 20],
+        [392, 55, 20],
+        [747, 61, 21],
+        [45, 388, 20],
+        [395, 394, 19],
+        [745, 386, 20]
+    ]
+    holes = []
+    for point in midPoints:
+        hole = []
+        radius = point[2]
+        oX = point[0]
+        oY = point[1]
+        for ang in range(0, 360):
+            seno, cosseno = getCosSin(ang)
+            pX = int(cosseno*radius)
+            pY = int(seno*radius)
+            hole.append([oX+pX, oY+pY])
+        holes.append(hole)
+    return holes
+
 
 # Function to find the position of the cue 
 def findTaco(img):
@@ -206,10 +230,13 @@ def detectCollision(cueBall, coloredBall):
         return True, collisionPt
     return False, []
 
-def pathPrediction(collisionPoint, coloredBall, paths):
+def pathPrediction(collisionPoint, coloredBall, paths, equation, m=0, n=0):
     # Colored ball path
     ballCenter = [coloredBall[0]+coloredBall[2]//2, coloredBall[1]+coloredBall[3]//2]
-    m2, n2 = lineEquation(collisionPoint, [ballCenter[0]+1, ballCenter[1]+1])
+    if not(equation):
+        m2, n2 = lineEquation(collisionPoint, [ballCenter[0]+1, ballCenter[1]+1])
+    else:
+        m2, n2 = m, n
     
     if collisionPoint[0] > coloredBall[0]+coloredBall[2]//2:
         x2 = 30
@@ -255,7 +282,7 @@ def shotPrediction(taco, cueBall, coloredBalls):
             if collision:
                 x1, y1 = collisionPoint[0], collisionPoint[1]
                 paths = [[coloredBalls[0]+coloredBalls[2]//2, coloredBalls[1]+coloredBalls[3]//2]]
-                paths = pathPrediction(collisionPoint, coloredBalls, paths)
+                paths = pathPrediction(collisionPoint, coloredBalls, paths, False)
                 color, inHole = bouncePrediction(paths[-1])
                 for i, path in enumerate(paths):
                     if i == 0:
@@ -280,6 +307,7 @@ def shotPrediction(taco, cueBall, coloredBalls):
 frameWidth = 960
 frameHeight = 540
 cap = cv2.VideoCapture("resources/shots.mp4")
+holes = findHoles()
 while True:
     success, frame = cap.read()
     imgRaw = cv2.resize(frame, (frameWidth, frameHeight))
