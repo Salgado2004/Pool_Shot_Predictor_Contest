@@ -147,14 +147,64 @@ def dottedLine(img,pt1,pt2,color):
             cv2.circle(img,p,3,color,-1)
             #cv2.putText(img, f"{p}", p, cv2.FONT_HERSHEY_PLAIN, 0.5, (0,0,0))
 
+def detectCollision(cueBall, coloredBall):   
+    cueBallList = []
+    coloredBallList = []
+
+    for x in range(cueBall[0], cueBall[2]):
+        cueBallList.append([x,cueBall[1]])
+        cueBallList.append([x,cueBall[3]])
+    for y in range(cueBall[1], cueBall[3]):
+        cueBallList.append([cueBall[0],y])
+        cueBallList.append([cueBall[2],y])
+
+    for x in range(coloredBall[0], coloredBall[2]):
+        coloredBallList.append([x,coloredBall[1]])
+        coloredBallList.append([x,coloredBall[3]])
+    for y in range(coloredBall[1], coloredBall[3]):
+        coloredBallList.append([coloredBall[0],y])
+        coloredBallList.append([coloredBall[2],y])
+
+    collisionPoints = []
+    for point in cueBallList:
+        if point in coloredBallList:
+            collisionPoints.append(point)
+
+    if len(collisionPoints) > 0:
+        xPt = 0
+        yPt = 0
+        for point in collisionPoints:
+            xPt += point[0]
+            yPt += point[1]
+        collisionPt = [xPt//len(collisionPoints), yPt//len(collisionPoints)]
+        cv2.circle(imgCropped, (collisionPt[0], collisionPt[1]), 8, (0,0,255), cv2.FILLED)
+        return True, collisionPt
+    return False, []
+
 def trajectoriaPrediction(taco, cueBall, coloredBalls):
     try:
-        #cv2.line(imgCropped, (taco[0]+taco[2]//2, taco[1]+taco[3]//2), (cueBall[0]+cueBall[2]//2, cueBall[1]+cueBall[3]//2), (255,0,0), 2)
-        
         #Cue ball to colored ball
         m1, n1 = lineEquation([taco[0]+taco[2]//2, taco[1]+taco[3]//2], [cueBall[0]+cueBall[2]//2, cueBall[1]+cueBall[3]//2])
-        x1 = (coloredBalls[0]+coloredBalls[2]//2)+1
-        y1 = int((m1*x1) + n1)
+        
+        points = []
+        x_last = (coloredBalls[0]+coloredBalls[2]//2)
+        x1, y1 = x_last, int((m1*x_last) + n1)
+        if x_last >= cueBall[0]+cueBall[2]//2:
+            step = 1
+        else:
+            step = -1
+        for x in range(cueBall[0]+cueBall[2]//2, x_last, step):
+            y = int((m1*x) + n1)
+            points.append([x, y])
+
+        for point in points:
+            bbox = [point[0]-cueBall[2]//2, point[1]-cueBall[3]//2, point[0]+cueBall[2]//2, point[1]+cueBall[3]//2,]
+            collision, collisionPoint = detectCollision(bbox, [coloredBalls[0],coloredBalls[1], coloredBalls[0]+coloredBalls[2], coloredBalls[1]+coloredBalls[3]])
+            if collision:
+                x1, y1 = collisionPoint[0], collisionPoint[1]
+                break
+
+        
         dottedLine(imgCropped, (cueBall[0]+cueBall[2]//2, cueBall[1]+cueBall[3]//2), (x1, y1), (200,200,200))
         cv2.circle(imgCropped, (x1, y1), 5, (200,200,200), cv2.FILLED)
 
@@ -192,5 +242,5 @@ while True:
     trajectoriaPrediction(taco, cueBall, coloredBalls)
     #finalImg = stackImages(0.7, [imgCropped, taco])
     cv2.imshow("Result", imgCropped)
-    if cv2.waitKey(20) & 0xFF == ord('q'):
+    if cv2.waitKey(50) & 0xFF == ord('q'):
         break
