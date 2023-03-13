@@ -1,4 +1,5 @@
 import cv2
+import math
 import numpy as np
 
 def stackImages(scale,imgArray):
@@ -31,6 +32,19 @@ def stackImages(scale,imgArray):
         hor= np.hstack(imgArray)
         ver = hor
     return ver
+
+def getCosSin(deg):
+    angulo = math.radians(deg)
+    seno = math.sin(angulo)
+    cosseno = math.cos(angulo)
+
+    if cosseno == 6.123233995736766e-17:
+        cosseno = 0
+
+    if seno == 6.123233995736766e-17:
+        seno = 0
+
+    return seno, cosseno
 
 def colorFilter(img, lower, upper):
     imgHSV = cv2.cvtColor(img,cv2.COLOR_BGR2HSV)
@@ -127,9 +141,9 @@ def findColoredBalls(img):
         if ballCount == 1:
             x, y, w, h = foundBalls[0][0], foundBalls[0][1], foundBalls[0][2], foundBalls[0][3]
             cv2.putText(imgCropped, "Bola", (x+(w//2)+28, y+(h//2)+88), cv2.FONT_HERSHEY_SIMPLEX, 0.4,  (0,0,255), 1)
-            #return [x+38, y+110, w, h]
+            return [x+38, y+110, w, h]
     coloredBalls = stackImages(0.46, [[filteredImgs[0], filteredImgs[1], filteredImgs[2], filteredImgs[3]], [filteredImgs[4], filteredImgs[5], filteredImgs[6], filteredImgs[7]]])
-    return coloredBalls
+    #return coloredBalls
 
 # Function to calculate de line between two points
 def lineEquation(point1, point2):
@@ -158,19 +172,23 @@ def detectCollision(cueBall, coloredBall):
     cueBallList = []
     coloredBallList = []
 
-    for x in range(cueBall[0], cueBall[2]):
-        cueBallList.append([x,cueBall[1]])
-        cueBallList.append([x,cueBall[3]])
-    for y in range(cueBall[1], cueBall[3]):
-        cueBallList.append([cueBall[0],y])
-        cueBallList.append([cueBall[2],y])
+    radius = (cueBall[2]-cueBall[0])//2
+    oX = cueBall[0]+(cueBall[2]-cueBall[0])//2
+    oY = cueBall[1]+(cueBall[3]-cueBall[1])//2
+    for ang in range(0, 360):
+        seno, cosseno = getCosSin(ang)
+        pX = int(cosseno*radius)
+        pY = int(seno*radius)
+        cueBallList.append([oX+pX, oY+pY])
 
-    for x in range(coloredBall[0], coloredBall[2]):
-        coloredBallList.append([x,coloredBall[1]])
-        coloredBallList.append([x,coloredBall[3]])
-    for y in range(coloredBall[1], coloredBall[3]):
-        coloredBallList.append([coloredBall[0],y])
-        coloredBallList.append([coloredBall[2],y])
+    radius = (coloredBall[2]-coloredBall[0])//2
+    oX = coloredBall[0]+(coloredBall[2]-coloredBall[0])//2
+    oY = coloredBall[1]+(coloredBall[3]-coloredBall[1])//2
+    for ang in range(0, 360):
+        seno, cosseno = getCosSin(ang)
+        pX = int(cosseno*radius)
+        pY = int(seno*radius)
+        coloredBallList.append([oX+pX, oY+pY])
 
     collisionPoints = []
     for point in cueBallList:
@@ -184,7 +202,7 @@ def detectCollision(cueBall, coloredBall):
             xPt += point[0]
             yPt += point[1]
         collisionPt = [xPt//len(collisionPoints), yPt//len(collisionPoints)]
-        cv2.circle(imgCropped, (collisionPt[0], collisionPt[1]), 8, (0,0,255), cv2.FILLED)
+        cv2.circle(imgCropped, (collisionPt[0], collisionPt[1]), 8, (0,200,200), cv2.FILLED)
         return True, collisionPt
     return False, []
 
@@ -193,6 +211,8 @@ def pathPrediction(collisionPoint, coloredBall):
     ballCenter = [coloredBall[0]+coloredBall[2]//2, coloredBall[1]+coloredBall[3]//2]
     m2, n2 = lineEquation(collisionPoint, [ballCenter[0]+1, ballCenter[1]+1])
     
+    paths = []
+    paths.append(ballCenter)
     if collisionPoint[0] > coloredBall[0]+coloredBall[2]//2:
         x2 = 30
     else:
@@ -200,13 +220,24 @@ def pathPrediction(collisionPoint, coloredBall):
     y2 = int((m2*x2)+n2)
     if y2 > 395:
         y2 = 395
+        x3 = x2
         x2 = int((y2-n2)/m2)
+        y3 = int(((-m2)*x3)+n2)
+        paths.append([x2, y2])
+        paths.append([x3,y3])
     if y2 < 60:
         y2 = 60
+        x3 = x2
         x2 = int((y2-n2)/m2)
-    dottedLine(imgCropped, (ballCenter[0], ballCenter[1]), (x2, y2),  (0,200,0))
-
-    
+        y3 = int(((-m2)*x3)+n2)
+        paths.append([x2, y2])
+        paths.append([x3,y3])
+    paths.append([x2, y2])
+    for i, path in enumerate(paths):
+        if i == 0:
+            pass
+        else:
+            dottedLine(imgCropped, (paths[i-1][0], paths[i-1][1]), (path[0], path[1]),  (0,200,0))
 
 # Control all the calculations used for the prediction
 def trajectoriaPrediction(taco, cueBall, coloredBalls):
@@ -251,12 +282,12 @@ while True:
     # Detect the objects 
     taco = findTaco(imgCropped)
     cueBall = findCueBall(imgCropped)
-    #coloredBalls = findColoredBalls(imgCropped)
-    filterImg = findColoredBalls(imgCropped)
+    coloredBalls = findColoredBalls(imgCropped)
+    #filterImg = findColoredBalls(imgCropped)
 
     # Start the calculations
-    #trajectoriaPrediction(taco, cueBall, coloredBalls)
+    trajectoriaPrediction(taco, cueBall, coloredBalls)
     #finalImg = stackImages(0.7, [imgCropped, taco])
-    cv2.imshow("Result", filterImg)
-    if cv2.waitKey(75) & 0xFF == ord('q'):
+    cv2.imshow("Result", imgRaw)
+    if cv2.waitKey(10) & 0xFF == ord('q'):
         break
