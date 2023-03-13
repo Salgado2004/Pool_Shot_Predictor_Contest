@@ -206,38 +206,31 @@ def detectCollision(cueBall, coloredBall):
         return True, collisionPt
     return False, []
 
-def pathPrediction(collisionPoint, coloredBall):
+def pathPrediction(collisionPoint, coloredBall, paths):
     # Colored ball path
     ballCenter = [coloredBall[0]+coloredBall[2]//2, coloredBall[1]+coloredBall[3]//2]
     m2, n2 = lineEquation(collisionPoint, [ballCenter[0]+1, ballCenter[1]+1])
     
-    paths = []
-    paths.append(ballCenter)
     if collisionPoint[0] > coloredBall[0]+coloredBall[2]//2:
         x2 = 30
     else:
         x2 = 790
     y2 = int((m2*x2)+n2)
 
-    color = (0,0,200)
-    inHole = False
     if y2 >= 390:
         y2 = 390
         x2 = int((y2-n2)/m2)
-        if x2 <= 61 and x2 >= 20 or x2 <= 414 and x2 >= 362 or x2 <= 770 and x2 >= 718:
-            color = (0,200,0)
-            inHole = True
     if y2 <= 60:
         y2 = 60
         x2 = int((y2-n2)/m2)
-        if x2 <= 61 and x2 >= 20 or x2 <= 414 and x2 >= 362 or x2 <= 770 and x2 >= 718:
-            color = (0,200,0)
-            inHole = True
     paths.append([x2, y2])
+    return paths
+    
+def bouncePrediction(point):
+    color = (0,0,200)
+    inHole = False
 
-    return paths, color, inHole
-    
-    
+    return color, inHole
 
 # Control all the calculations used for the prediction
 def trajectoriaPrediction(taco, cueBall, coloredBalls):
@@ -261,7 +254,9 @@ def trajectoriaPrediction(taco, cueBall, coloredBalls):
             collision, collisionPoint = detectCollision(bbox, [coloredBalls[0],coloredBalls[1], coloredBalls[0]+coloredBalls[2], coloredBalls[1]+coloredBalls[3]])
             if collision:
                 x1, y1 = collisionPoint[0], collisionPoint[1]
-                paths, color, inHole = pathPrediction(collisionPoint, coloredBalls)
+                paths = [[coloredBalls[0]+coloredBalls[2]//2, coloredBalls[1]+coloredBalls[3]//2]]
+                paths = pathPrediction(collisionPoint, coloredBalls, paths)
+                color, inHole = bouncePrediction(paths[-1])
                 for i, path in enumerate(paths):
                     if i == 0:
                         pass
