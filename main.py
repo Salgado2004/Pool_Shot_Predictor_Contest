@@ -44,6 +44,8 @@ def imgProcessing(img):
     imgCanny = cv2.Canny(imgBlur, 50, 50)
     return imgCanny
 
+
+# Function to find the position of the cue 
 def findTaco(img):
     lower = np.array([79,36,168])
     upper = np.array([98,255,217])
@@ -67,6 +69,7 @@ def findTaco(img):
                     return [x, y, w, h]
     #return imgFiltered
 
+# Function to find the position of the cue ball
 def findCueBall(img):
     croppedImg = img[56:383, 38:757]
     lower = np.array([40,9,107])
@@ -86,6 +89,7 @@ def findCueBall(img):
                 cv2.putText(imgCropped, "Bola branca", (x+(w//2)+40, y+(h//2)+61), cv2.FONT_HERSHEY_SIMPLEX, 0.4,  (255,255,255), 1)
                 return [x+38, y+56, w, h]
 
+# Function to find the position of the colored balls
 def findColoredBalls(img):
     croppedImg = img[98:383, 38:770]
     kernel = np.ones((5,5),np.uint8)
@@ -127,6 +131,7 @@ def findColoredBalls(img):
     coloredBalls = stackImages(0.46, [[filteredImgs[0], filteredImgs[1], filteredImgs[2], filteredImgs[3]], [filteredImgs[4], filteredImgs[5], filteredImgs[6], filteredImgs[7]]])
     #return coloredBalls
 
+# Function to calculate de line between two points
 def lineEquation(point1, point2):
     x1, y1 = point1[0], point1[1]
     x2, y2 = point2[0], point2[1]
@@ -134,6 +139,7 @@ def lineEquation(point1, point2):
     n = y1-(m*x1)
     return m, n
 
+# Function to draw a dotted line
 def dottedLine(img,pt1,pt2,color):
     dist =((pt1[0]-pt2[0])**2+(pt1[1]-pt2[1])**2)**.5
     pts= []
@@ -147,6 +153,7 @@ def dottedLine(img,pt1,pt2,color):
             cv2.circle(img,p,3,color,-1)
             #cv2.putText(img, f"{p}", p, cv2.FONT_HERSHEY_PLAIN, 0.5, (0,0,0))
 
+# Detect the collision point between the cue ball and the colored ball
 def detectCollision(cueBall, coloredBall):   
     cueBallList = []
     coloredBallList = []
@@ -181,6 +188,7 @@ def detectCollision(cueBall, coloredBall):
         return True, collisionPt
     return False, []
 
+# Control all the calculations used for the prediction
 def trajectoriaPrediction(taco, cueBall, coloredBalls):
     try:
         #Cue ball to colored ball
@@ -204,28 +212,11 @@ def trajectoriaPrediction(taco, cueBall, coloredBalls):
                 x1, y1 = collisionPoint[0], collisionPoint[1]
                 break
 
-        
         dottedLine(imgCropped, (cueBall[0]+cueBall[2]//2, cueBall[1]+cueBall[3]//2), (x1, y1), (200,200,200))
         cv2.circle(imgCropped, (x1, y1), 5, (200,200,200), cv2.FILLED)
 
-        #Colored ball to hole
-        """ m2, n2 = lineEquation([x1, y1], [coloredBalls[0]+coloredBalls[2]//2, coloredBalls[1]+coloredBalls[3]//2])
-        if cueBall[0] < coloredBalls[0]:
-            x2 = 505
-        else:
-            x2 = 26
-        y2 = int((m2*x2) + n2)
-        if y2 > 346:
-            y2 = 346
-            x2 = int((346-n2)/m2)
-        elif y2 < 51:
-            y2 = 51
-            x2 = int((51-n2)/m2)
-        dottedLine(imgCropped, (x1, y1), (x2, y2), (0,0,150)) """
-
     except TypeError:
         pass
-
 
 frameWidth = 960
 frameHeight = 540
@@ -235,12 +226,16 @@ while True:
     imgRaw = cv2.resize(frame, (frameWidth, frameHeight))
     imgCropped = imgRaw[10:460,80:881]
     cv2.imwrite("imgColors.png", imgCropped)
+
+    # Detect the objects 
     taco = findTaco(imgCropped)
     cueBall = findCueBall(imgCropped)
     coloredBalls = findColoredBalls(imgCropped)
     #filterImg = findColoredBalls(imgCropped)
+
+    # Start the calculations
     trajectoriaPrediction(taco, cueBall, coloredBalls)
     #finalImg = stackImages(0.7, [imgCropped, taco])
     cv2.imshow("Result", imgCropped)
-    if cv2.waitKey(50) & 0xFF == ord('q'):
+    if cv2.waitKey(75) & 0xFF == ord('q'):
         break
