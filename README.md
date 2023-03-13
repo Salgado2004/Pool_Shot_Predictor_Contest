@@ -6,8 +6,12 @@
 
 <p align="justify">It has been defined labels in front of the objects, to help me understand what the program was detecting during the development. Later on, I decided to keep them just for style.</p>
 
+<h2>Result samples</h2>
+<img src="https://user-images.githubusercontent.com/53799801/224831863-aa5f6abf-7909-40d6-a720-21d9930204f4.png"><br>
+
+
 <h2>&copy; Leonardo Salgado</h2>
-<img align="center" src="https://user-images.githubusercontent.com/53799801/224312217-dd02b5af-a6b4-45e6-b1df-db3f0b9dc702.png"><br>
+<img src="https://user-images.githubusercontent.com/53799801/224312217-dd02b5af-a6b4-45e6-b1df-db3f0b9dc702.png"><br>
 
 
 
