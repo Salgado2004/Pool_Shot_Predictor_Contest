@@ -233,7 +233,7 @@ def bouncePrediction(point):
     return color, inHole
 
 # Control all the calculations used for the prediction
-def trajectoriaPrediction(taco, cueBall, coloredBalls):
+def shotPrediction(taco, cueBall, coloredBalls):
     try:
         #Cue ball to colored ball
         m1, n1 = lineEquation([taco[0]+taco[2]//2, taco[1]+taco[3]//2], [cueBall[0]+cueBall[2]//2, cueBall[1]+cueBall[3]//2])
@@ -269,7 +269,6 @@ def trajectoriaPrediction(taco, cueBall, coloredBalls):
                     else:
                         cv2.rectangle(imgCropped, (80, 395), (280,440), color, cv2.FILLED)
                         cv2.putText(imgCropped, "Prediction: Out", (85, 425), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (200,200,200), 2)
-                
                 break
 
         dottedLine(imgCropped, (cueBall[0]+cueBall[2]//2, cueBall[1]+cueBall[3]//2), (x1, y1), (200,200,200))
@@ -294,7 +293,7 @@ while True:
     #filterImg = findColoredBalls(imgCropped)
 
     # Start the calculations
-    trajectoriaPrediction(taco, cueBall, coloredBalls)
+    shotPrediction(taco, cueBall, coloredBalls)
     #finalImg = stackImages(0.7, [imgCropped, taco])
     cv2.imshow("Result", imgRaw)
     if cv2.waitKey(10) & 0xFF == ord('q'):
