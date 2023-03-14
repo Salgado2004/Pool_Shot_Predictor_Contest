@@ -218,29 +218,6 @@ def detectCollision(cueBall, coloredBall):
         return True, collisionPt
     return False, []
 
-def pathPrediction(collisionPoint, coloredBall, paths, equation, m=0, n=0):
-    # Colored ball path
-    if not(equation):
-        ballCenter = [coloredBall[0]+coloredBall[2]//2, coloredBall[1]+coloredBall[3]//2]
-        m2, n2 = lineEquation(collisionPoint, [ballCenter[0]+1, ballCenter[1]+1])
-    else:
-        m2, n2 = (-m), n
-    
-    if collisionPoint[0] > coloredBall[0]+coloredBall[2]//2:
-        x2 = 30
-    else:
-        x2 = 790
-    y2 = int((m2*x2)+n2)
-
-    if y2 >= 390:
-        y2 = 390
-        x2 = int((y2-n2)/m2)
-    if y2 <= 60:
-        y2 = 60
-        x2 = int((y2-n2)/m2)
-    paths.append([x2, y2])
-    return paths
-    
 def bouncePrediction(point, radius, holes):
     color = (0,0,200)
     inHole = False
@@ -251,6 +228,34 @@ def bouncePrediction(point, radius, holes):
             color = (0,200,0)
 
     return color, inHole
+
+def pathPrediction(collisionPoint, coloredBall, paths, holes):
+    # Colored ball path
+    ballCenter = [coloredBall[0]+coloredBall[2]//2, coloredBall[1]+coloredBall[3]//2]
+    m2, n2 = lineEquation(collisionPoint, [ballCenter[0]+1, ballCenter[1]+1])
+    
+    for i in range(0,2):
+        if collisionPoint[0] > coloredBall[0]+coloredBall[2]//2:
+            x2 = 30
+        else:
+            x2 = 790
+        y2 = int((m2*x2)+n2)
+
+        if y2 >= 390:
+            y2 = 390
+            x2 = int((y2-n2)/m2)
+        if y2 <= 60:
+            y2 = 60
+            x2 = int((y2-n2)/m2)
+        paths.append([x2, y2])
+        color, inHole = bouncePrediction(paths[-1], coloredBalls[2]//2, holes)
+        if inHole:
+            return paths, color, inHole
+        else:
+            m2 = -m2
+            n2 = y2-(m2*x2)
+
+    return paths, color, inHole
 
 # Control all the calculations used for the prediction
 def shotPrediction(taco, cueBall, coloredBalls, holes):
@@ -275,8 +280,7 @@ def shotPrediction(taco, cueBall, coloredBalls, holes):
             if collision:
                 x1, y1 = collisionPoint[0], collisionPoint[1]
                 paths = [[coloredBalls[0]+coloredBalls[2]//2, coloredBalls[1]+coloredBalls[3]//2]]
-                paths = pathPrediction(collisionPoint, coloredBalls, paths, False)
-                color, inHole = bouncePrediction(paths[-1], coloredBalls[2]//2, holes)
+                paths, color, inHole = pathPrediction(collisionPoint, coloredBalls, paths, holes)
                 for i, path in enumerate(paths):
                     if i == 0:
                         pass
@@ -314,8 +318,10 @@ while True:
     #filterImg = findColoredBalls(imgCropped)
 
     # Start the calculations
-    shotPrediction(taco, cueBall, coloredBalls, holes)
+    if taco and cueBall and coloredBalls:
+        shotPrediction(taco, cueBall, coloredBalls, holes)
     #finalImg = stackImages(0.7, [imgCropped, taco])
     cv2.imshow("Result", imgRaw)
-    if cv2.waitKey(10) & 0xFF == ord('q'):
+    cv2.imwrite("screenshot.png", imgRaw)
+    if cv2.waitKey(75) & 0xFF == ord('q'):
         break
