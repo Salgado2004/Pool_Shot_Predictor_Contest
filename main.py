@@ -61,26 +61,28 @@ def imgProcessing(img):
 # Function to calculate the position of the holes
 def findHoles():
     holes = [
-        [15, 40, 63, 85],
+        [15, 40, 65, 85],
         [372, 35, 412, 75],
-        [725, 39, 770, 82],
+        [725, 39, 795, 78],
         [25, 369, 66, 408],
         [377, 376, 414, 413],
         [725, 368, 766, 406]
     ]
     return holes
 
-
 # Function to find the position of the cue 
 def findTaco(img):
-    lower = np.array([79,36,168])
-    upper = np.array([98,255,217])
-    imgFiltered = colorFilter(img, lower, upper)
+    croppedImg = img[90:, :]
+    lower = np.array([77,44,159])
+    upper = np.array([100,89,213])
+    imgFiltered = colorFilter(croppedImg, lower, upper)
     imgProcessed = imgProcessing(imgFiltered)
     contours, hierarchy = cv2.findContours(imgProcessed, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
+    maxArea = -1
+    taco = []
     for i in contours:
         area = cv2.contourArea(i)
-        if area > 15 and area < 65:
+        if area > 2 and area < 80:
             cv2.drawContours(imgFiltered, i, -1, (172, 0, 196), 2)
             peri = cv2.arcLength(i, True)
             approx = cv2.approxPolyDP(i, 0.02*peri, True)
@@ -89,10 +91,14 @@ def findTaco(img):
             cv2.putText(imgFiltered, f"{w}, {h}" ,(x+w//2, y+h//2-10),cv2.FONT_HERSHEY_COMPLEX, 0.7, (255,255,255), 1)
             cv2.putText(imgFiltered, f"{area}" ,(x+w//2, y+h//2+15),cv2.FONT_HERSHEY_COMPLEX, 0.7, (255,255,255), 1)
             if objCor > 2:
-                if w < 15 and w > 6 and h < 15 and h > 6:
-                    cv2.rectangle(imgFiltered, (x, y), (x+w, y+h), (255,255,255), 2)
-                    cv2.putText(imgCropped, "Taco", (x+(w//2)-10, y+(h//2)-10), cv2.FONT_HERSHEY_SIMPLEX, 0.4,  (0,0,0), 1)
-                    return [x, y, w, h]
+                if w < 18 and w > 5 and h < 18 and h > 5 and w-h != 0:
+                    if area > maxArea:
+                        maxArea = area
+                        taco = [x, y+90, w, h]
+    if taco:
+        cv2.rectangle(imgFiltered, (taco[0], taco[1]-90), (taco[0]+taco[2], taco[1]-90+taco[3]), (255,255,255), 2)
+        cv2.putText(imgCropped, "Taco", (taco[0]+(taco[2]//2)-10, taco[1]+(taco[3]//2)-10), cv2.FONT_HERSHEY_SIMPLEX, 0.4,  (0,0,0), 1)
+        return taco
     #return imgFiltered
 
 # Function to find the position of the cue ball
@@ -161,7 +167,10 @@ def findColoredBalls(img):
 def lineEquation(point1, point2):
     x1, y1 = point1[0], point1[1]
     x2, y2 = point2[0], point2[1]
-    m = (y2-y1)/(x2-x1)
+    try:
+        m = (y2-y1)/(x2-x1)
+    except ZeroDivisionError:
+        m = (y2-y1)/(x2+1-x1)
     n = y1-(m*x1)
     return m, n
 
@@ -234,11 +243,13 @@ def pathPrediction(collisionPoint, coloredBall, paths, holes):
     ballCenter = [coloredBall[0]+coloredBall[2]//2, coloredBall[1]+coloredBall[3]//2]
     m2, n2 = lineEquation(collisionPoint, [ballCenter[0]+1, ballCenter[1]+1])
     
+    if collisionPoint[0] > coloredBall[0]+coloredBall[2]//2:
+        last_x = 30
+    else:
+        last_x = 790
+
     for i in range(0,2):
-        if collisionPoint[0] > coloredBall[0]+coloredBall[2]//2:
-            x2 = 30
-        else:
-            x2 = 790
+        x2 = last_x
         y2 = int((m2*x2)+n2)
 
         if y2 >= 390:
@@ -247,8 +258,16 @@ def pathPrediction(collisionPoint, coloredBall, paths, holes):
         if y2 <= 60:
             y2 = 60
             x2 = int((y2-n2)/m2)
+        if y2 > 75 and y2 < 350 and x2 >= 765:
+            x2 = 765
+            y2 = int((m2*x2)+n2)
+            last_x = 30
+        if y2 > 75 and y2 < 350 and x2 <= 35:
+            x2 = 35
+            y2 = int((m2*x2)+n2)
+            last_x = 765
         paths.append([x2, y2])
-        color, inHole = bouncePrediction(paths[-1], coloredBalls[2]//2, holes)
+        color, inHole = bouncePrediction(paths[-1], 12, holes)
         if inHole:
             return paths, color, inHole
         else:
@@ -322,6 +341,6 @@ while True:
         shotPrediction(taco, cueBall, coloredBalls, holes)
     #finalImg = stackImages(0.7, [imgCropped, taco])
     cv2.imshow("Result", imgRaw)
-    cv2.imwrite("screenshot.png", imgRaw)
+    #cv2.imwrite("screenshot.png", imgRaw)
     if cv2.waitKey(75) & 0xFF == ord('q'):
         break
