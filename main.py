@@ -220,8 +220,8 @@ def detectCollision(cueBall, coloredBall):
 
 def pathPrediction(collisionPoint, coloredBall, paths, equation, m=0, n=0):
     # Colored ball path
-    ballCenter = [coloredBall[0]+coloredBall[2]//2, coloredBall[1]+coloredBall[3]//2]
     if not(equation):
+        ballCenter = [coloredBall[0]+coloredBall[2]//2, coloredBall[1]+coloredBall[3]//2]
         m2, n2 = lineEquation(collisionPoint, [ballCenter[0]+1, ballCenter[1]+1])
     else:
         m2, n2 = (-m), n
