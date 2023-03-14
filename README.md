@@ -10,6 +10,8 @@
 
 <h2>Result samples</h2>
 <img src="https://user-images.githubusercontent.com/53799801/224831863-aa5f6abf-7909-40d6-a720-21d9930204f4.png"><br>
+<img src="https://user-images.githubusercontent.com/53799801/225056823-8d502def-8b5b-4a02-a457-fb980c2a36d1.png"><br>
+
 
 <b>** If you like this project, please vote for me in <a href="https://www.computervision.zone/pool-shot-predictor/">https://www.computervision.zone/pool-shot-predictor/</a></b> 
 
