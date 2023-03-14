@@ -324,11 +324,11 @@ frameWidth = 960
 frameHeight = 540
 cap = cv2.VideoCapture("resources/shots.mp4")
 holes = findHoles()
+frameId = 0
 while True:
     success, frame = cap.read()
     imgRaw = cv2.resize(frame, (frameWidth, frameHeight))
     imgCropped = imgRaw[10:460,80:881]
-    cv2.imwrite("imgColors.png", imgCropped)
 
     # Detect the objects 
     taco = findTaco(imgCropped)
@@ -341,6 +341,7 @@ while True:
         shotPrediction(taco, cueBall, coloredBalls, holes)
     #finalImg = stackImages(0.7, [imgCropped, taco])
     cv2.imshow("Result", imgRaw)
-    #cv2.imwrite("screenshot.png", imgRaw)
+    cv2.imwrite(f"frames/frame_{frameId}.png", imgRaw)
+    frameId +=1
     if cv2.waitKey(75) & 0xFF == ord('q'):
         break
