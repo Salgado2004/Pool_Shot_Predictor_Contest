@@ -341,7 +341,7 @@ while True:
         shotPrediction(taco, cueBall, coloredBalls, holes)
     #finalImg = stackImages(0.7, [imgCropped, taco])
     cv2.imshow("Result", imgRaw)
-    cv2.imwrite(f"frames/frame_{frameId}.png", imgRaw)
+    #cv2.imwrite(f"frames/frame_{frameId}.png", imgRaw)
     frameId +=1
     if cv2.waitKey(75) & 0xFF == ord('q'):
         break
