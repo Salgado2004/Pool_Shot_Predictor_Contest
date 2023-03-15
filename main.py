@@ -65,7 +65,7 @@ def findHoles():
         [372, 35, 412, 75],
         [725, 39, 795, 78],
         [25, 369, 66, 408],
-        [377, 376, 414, 413],
+        [377, 376, 420, 413],
         [725, 368, 766, 406]
     ]
     return holes
@@ -151,9 +151,11 @@ def findColoredBalls(img):
                     #cv2.putText(f_img, f"{w}", (x, y-15), cv2.FONT_HERSHEY_TRIPLEX, 0.9, (255,255,255), 1)
                     #cv2.putText(f_img, f"{h}", (x+w, y+(h//2)+15), cv2.FONT_HERSHEY_TRIPLEX, 0.9, (255,255,255), 1)
                     if h > 15 and h < 38 and w > 15 and w < 38 and (w-h) > -7 and (w-h) < 7:
-                        cv2.circle(f_img, (x+w//2,y+h//2), (w//2), (255,255,0), 2)
                         ballCount += 1
                         foundBalls.append([x, y, w, h])
+                        if w//2 > 15:
+                            w = 15
+                        cv2.circle(f_img, (x+w//2,y+h//2), (w//2), (255,255,0), 2)
                         cv2.putText(f_img, "Bola", (x+(w//2)-10, y+(h//2)-10), cv2.FONT_HERSHEY_COMPLEX, 0.8,  (255,255,255), 1)
         cv2.putText(f_img, f"Ball count: {ballCount}", (15, 25), cv2.FONT_HERSHEY_SIMPLEX, 0.9,  (255,255,255), 2)
         if ballCount == 1:
@@ -320,11 +322,14 @@ def shotPrediction(taco, cueBall, coloredBalls, holes):
     except TypeError:
         pass
 
+cap = cv2.VideoCapture("resources/shots.mp4")
 frameWidth = 960
 frameHeight = 540
-cap = cv2.VideoCapture("resources/shots.mp4")
+size = (frameWidth, frameHeight)
+
+#result = cv2.VideoWriter('resources/shotsProcessed.mp4', cv2.VideoWriter_fourcc(*'mp4v'), 10, size)
+
 holes = findHoles()
-frameId = 0
 while True:
     success, frame = cap.read()
     imgRaw = cv2.resize(frame, (frameWidth, frameHeight))
@@ -334,14 +339,15 @@ while True:
     taco = findTaco(imgCropped)
     cueBall = findCueBall(imgCropped)
     coloredBalls = findColoredBalls(imgCropped)
-    #filterImg = findColoredBalls(imgCropped)
+    filterImg = findColoredBalls(imgCropped)
 
     # Start the calculations
     if taco and cueBall and coloredBalls:
         shotPrediction(taco, cueBall, coloredBalls, holes)
     #finalImg = stackImages(0.7, [imgCropped, taco])
     cv2.imshow("Result", imgRaw)
-    #cv2.imwrite(f"frames/frame_{frameId}.png", imgRaw)
-    frameId +=1
+    #result.write(imgRaw)
     if cv2.waitKey(75) & 0xFF == ord('q'):
         break
+
+#result.release()
