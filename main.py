@@ -64,7 +64,7 @@ def findHoles():
         [15, 40, 65, 85],
         [372, 35, 412, 75],
         [725, 39, 795, 78],
-        [25, 369, 66, 408],
+        [25, 369, 69, 408],
         [377, 376, 420, 413],
         [725, 368, 766, 406]
     ]
@@ -354,7 +354,7 @@ frameWidth = 960
 frameHeight = 540
 size = (frameWidth, frameHeight)
 
-#result = cv2.VideoWriter('resources/shotsProcessed.mp4', cv2.VideoWriter_fourcc(*'mp4v'), 10, size)
+result = cv2.VideoWriter('resources/shotsProcessed.mp4', cv2.VideoWriter_fourcc(*'mp4v'), 10, size)
 
 holes = findHoles()
 while True:
@@ -371,13 +371,11 @@ while True:
     # Start the calculations
     if taco and cueBall and coloredBalls:
         hitPoint = getHitPoint(taco, cueBall)
-        cv2.circle(imgCropped, (taco[0]+taco[2]//2, taco[1]+taco[3]//2), (taco[2]//2+taco[3]//2)//2, (243, 123, 42), 2)
-        cv2.line(imgCropped, (hitPoint[0], hitPoint[1]), (cueBall[0]+cueBall[2]//2, cueBall[1]+cueBall[3]//2), (200,200,200), 2)
         shotPrediction(hitPoint, cueBall, coloredBalls, holes)
     #finalImg = stackImages(0.8, [imgCropped, taco])
     cv2.imshow("Result", imgRaw)
-    #result.write(imgRaw)
+    result.write(imgRaw)
     if cv2.waitKey(75) & 0xFF == ord('q'):
         break
 
-#result.release()
+result.release()
