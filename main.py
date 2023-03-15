@@ -101,8 +101,8 @@ def findTaco(img):
     if taco:
         cv2.rectangle(imgFiltered, (taco[0], taco[1]-90), (taco[0]+taco[2], taco[1]-90+taco[3]), (255,255,255), 2)
         cv2.putText(imgCropped, "Taco", (taco[0]+(taco[2]//2)-10, taco[1]+(taco[3]//2)-10), cv2.FONT_HERSHEY_SIMPLEX, 0.4,  (0,0,0), 1)
-        #return taco
-    return imgFiltered
+        return taco
+    #return imgFiltered
 
 # Function to find the position of the cue ball
 def findCueBall(img):
@@ -167,6 +167,30 @@ def findColoredBalls(img):
             return [x+38, y+110, w, h]
     coloredBalls = stackImages(0.46, [[filteredImgs[0], filteredImgs[1], filteredImgs[2], filteredImgs[3]], [filteredImgs[4], filteredImgs[5], filteredImgs[6], filteredImgs[7]]])
     #return coloredBalls
+
+# Function to detect the point of the cue that hits the ball
+def getHitPoint(taco, cueBall):
+    tacoPoints = []
+    hitPoint = []
+    cueBallX = cueBall[0]+cueBall[2]//2
+    cueBallY = cueBall[1]+cueBall[3]//2
+
+    radius = (taco[2]//2+taco[3]//2)//2
+    oX = taco[0]+taco[2]//2
+    oY = taco[1]+taco[3]//2
+    for ang in range(0, 360):
+        seno, cosseno = getCosSin(ang)
+        pX = int(cosseno*radius)
+        pY = int(seno*radius)
+        tacoPoints.append([oX+pX, oY+pY])
+
+    minDistance = 1000000
+    for point in tacoPoints:
+        distance = math.sqrt(math.pow(cueBallX-point[0], 2) + math.pow(cueBallY-point[1], 2))
+        if distance < minDistance:
+            minDistance = distance
+            hitPoint = point
+    return hitPoint
 
 # Function to calculate de line between two points
 def lineEquation(point1, point2):
@@ -282,11 +306,10 @@ def pathPrediction(collisionPoint, coloredBall, paths, holes):
     return paths, color, inHole
 
 # Control all the calculations used for the prediction
-def shotPrediction(taco, cueBall, coloredBalls, holes):
+def shotPrediction(hitPoint, cueBall, coloredBalls, holes):
     try:
         #Cue ball to colored ball
-        cv2.circle(imgCropped, (taco[0]+taco[2]//2, taco[1]+taco[3]//2), (taco[2]//2+taco[3]//2)//2, (243, 123, 42), 2)
-        m1, n1 = lineEquation([taco[0]+taco[2]//2, taco[1]+taco[3]//2], [cueBall[0]+cueBall[2]//2, cueBall[1]+cueBall[3]//2])
+        m1, n1 = lineEquation([hitPoint[0], hitPoint[1]], [cueBall[0]+cueBall[2]//2, cueBall[1]+cueBall[3]//2])
         
         points = []
         x_last = (coloredBalls[0]+coloredBalls[2]//2)
@@ -346,10 +369,13 @@ while True:
     filterImg = findColoredBalls(imgCropped)
 
     # Start the calculations
-    #if taco and cueBall and coloredBalls:
-        #shotPrediction(taco, cueBall, coloredBalls, holes)
-    finalImg = stackImages(0.8, [imgCropped, taco])
-    cv2.imshow("Result", finalImg)
+    if taco and cueBall and coloredBalls:
+        hitPoint = getHitPoint(taco, cueBall)
+        cv2.circle(imgCropped, (taco[0]+taco[2]//2, taco[1]+taco[3]//2), (taco[2]//2+taco[3]//2)//2, (243, 123, 42), 2)
+        cv2.line(imgCropped, (hitPoint[0], hitPoint[1]), (cueBall[0]+cueBall[2]//2, cueBall[1]+cueBall[3]//2), (200,200,200), 2)
+        shotPrediction(hitPoint, cueBall, coloredBalls, holes)
+    #finalImg = stackImages(0.8, [imgCropped, taco])
+    cv2.imshow("Result", imgRaw)
     #result.write(imgRaw)
     if cv2.waitKey(75) & 0xFF == ord('q'):
         break
