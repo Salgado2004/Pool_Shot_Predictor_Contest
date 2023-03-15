@@ -75,14 +75,17 @@ def findTaco(img):
     croppedImg = img[90:, :]
     lower = np.array([77,44,159])
     upper = np.array([100,89,213])
+    kernel = np.ones((5,5),np.uint8)
     imgFiltered = colorFilter(croppedImg, lower, upper)
     imgProcessed = imgProcessing(imgFiltered)
-    contours, hierarchy = cv2.findContours(imgProcessed, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
+    dial = cv2.dilate(imgProcessed, kernel, iterations=1)
+    thres = cv2.erode(dial, kernel, iterations=1)
+    contours, hierarchy = cv2.findContours(thres, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
     maxArea = -1
     taco = []
     for i in contours:
         area = cv2.contourArea(i)
-        if area > 2 and area < 80:
+        if area > 20 and area < 150:
             cv2.drawContours(imgFiltered, i, -1, (172, 0, 196), 2)
             peri = cv2.arcLength(i, True)
             approx = cv2.approxPolyDP(i, 0.02*peri, True)
@@ -91,15 +94,15 @@ def findTaco(img):
             cv2.putText(imgFiltered, f"{w}, {h}" ,(x+w//2, y+h//2-10),cv2.FONT_HERSHEY_COMPLEX, 0.7, (255,255,255), 1)
             cv2.putText(imgFiltered, f"{area}" ,(x+w//2, y+h//2+15),cv2.FONT_HERSHEY_COMPLEX, 0.7, (255,255,255), 1)
             if objCor > 2:
-                if w < 18 and w > 5 and h < 18 and h > 5 and w-h != 0:
+                if w < 18 and w > 5 and h < 18 and h > 5:
                     if area > maxArea:
                         maxArea = area
                         taco = [x, y+90, w, h]
     if taco:
         cv2.rectangle(imgFiltered, (taco[0], taco[1]-90), (taco[0]+taco[2], taco[1]-90+taco[3]), (255,255,255), 2)
         cv2.putText(imgCropped, "Taco", (taco[0]+(taco[2]//2)-10, taco[1]+(taco[3]//2)-10), cv2.FONT_HERSHEY_SIMPLEX, 0.4,  (0,0,0), 1)
-        return taco
-    #return imgFiltered
+        #return taco
+    return imgFiltered
 
 # Function to find the position of the cue ball
 def findCueBall(img):
@@ -282,6 +285,7 @@ def pathPrediction(collisionPoint, coloredBall, paths, holes):
 def shotPrediction(taco, cueBall, coloredBalls, holes):
     try:
         #Cue ball to colored ball
+        cv2.circle(imgCropped, (taco[0]+taco[2]//2, taco[1]+taco[3]//2), (taco[2]//2+taco[3]//2)//2, (243, 123, 42), 2)
         m1, n1 = lineEquation([taco[0]+taco[2]//2, taco[1]+taco[3]//2], [cueBall[0]+cueBall[2]//2, cueBall[1]+cueBall[3]//2])
         
         points = []
@@ -342,10 +346,10 @@ while True:
     filterImg = findColoredBalls(imgCropped)
 
     # Start the calculations
-    if taco and cueBall and coloredBalls:
-        shotPrediction(taco, cueBall, coloredBalls, holes)
-    #finalImg = stackImages(0.7, [imgCropped, taco])
-    cv2.imshow("Result", imgRaw)
+    #if taco and cueBall and coloredBalls:
+        #shotPrediction(taco, cueBall, coloredBalls, holes)
+    finalImg = stackImages(0.8, [imgCropped, taco])
+    cv2.imshow("Result", finalImg)
     #result.write(imgRaw)
     if cv2.waitKey(75) & 0xFF == ord('q'):
         break
