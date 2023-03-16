@@ -169,13 +169,18 @@ def findColoredBalls(img):
     #return coloredBalls
 
 # Function to detect the point of the cue that hits the ball
-def getHitPoint(taco, cueBall):
+def getHitPoint(taco, cueBall, averageRadius, hitPoints):
     tacoPoints = []
     hitPoint = []
     cueBallX = cueBall[0]+cueBall[2]//2
     cueBallY = cueBall[1]+cueBall[3]//2
 
-    radius = (taco[2]//2+taco[3]//2)//2
+    averageRadius.append((taco[2]//2+taco[3]//2)//2)
+    radius = 0
+    for r in averageRadius:
+        radius += r
+    radius = radius//(len(averageRadius))
+
     oX = taco[0]+taco[2]//2
     oY = taco[1]+taco[3]//2
     for ang in range(0, 360):
@@ -190,6 +195,14 @@ def getHitPoint(taco, cueBall):
         if distance < minDistance:
             minDistance = distance
             hitPoint = point
+
+    hitPoints.append(hitPoint)
+    sumX = 0
+    sumY = 0
+    for point in hitPoints:
+        sumX += point[0]
+        sumY += point[1]
+    hitPoint = [sumX//len(hitPoints), sumY//len(hitPoints)]
     return hitPoint
 
 # Function to calculate de line between two points
@@ -341,6 +354,13 @@ def shotPrediction(hitPoint, cueBall, coloredBalls, holes):
                     else:
                         cv2.rectangle(imgCropped, (80, 395), (280,440), color, cv2.FILLED)
                         cv2.putText(imgCropped, "Prediction: Out", (85, 425), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (200,200,200), 2)
+                
+                print("Bola branca: ", cueBall)
+                print("Taco: ", hitPoint)
+                print("Bola colorida: ", coloredBalls)
+                print("Ponto de colisão: ", collisionPoint)
+                print("Resultado: ", inHole)
+                print("\n")
                 break
 
         dottedLine(imgCropped, (cueBall[0]+cueBall[2]//2, cueBall[1]+cueBall[3]//2), (x1, y1), (200,200,200))
@@ -357,6 +377,12 @@ size = (frameWidth, frameHeight)
 result = cv2.VideoWriter('resources/shotsProcessed.mp4', cv2.VideoWriter_fourcc(*'mp4v'), 10, size)
 
 holes = findHoles()
+hitPoints = []
+averageRadius = []
+lastSpot = []
+prediction = True
+
+shotIndex = 1
 while True:
     success, frame = cap.read()
     imgRaw = cv2.resize(frame, (frameWidth, frameHeight))
@@ -366,12 +392,31 @@ while True:
     taco = findTaco(imgCropped)
     cueBall = findCueBall(imgCropped)
     coloredBalls = findColoredBalls(imgCropped)
-    filterImg = findColoredBalls(imgCropped)
+    #filterImg = findColoredBalls(imgCropped)
 
     # Start the calculations
     if taco and cueBall and coloredBalls:
-        hitPoint = getHitPoint(taco, cueBall)
-        shotPrediction(hitPoint, cueBall, coloredBalls, holes)
+        if not(lastSpot):
+            lastSpot.append([cueBall[0]+cueBall[2]//2, cueBall[1]+cueBall[3]//2])
+            lastSpot.append([cueBall[0]+cueBall[2]//2, cueBall[1]+cueBall[3]//2])
+        else:
+            lastSpot.append([cueBall[0]+cueBall[2]//2, cueBall[1]+cueBall[3]//2])
+
+        print("\nLast spots:", lastSpot[-2], lastSpot[-1])
+        difference = lambda a, b : math.sqrt(math.pow(a[0]-b[0], 2)+math.pow(a[1]-b[1], 2))
+        if difference(lastSpot[-1], lastSpot[-2]) >= 2:
+            prediction = False
+            cv2.putText(imgRaw, f"Bola em movimento - Tacada {shotIndex}/10", (10,25), cv2.FONT_HERSHEY_PLAIN, 1.3, (0,0,0), 2)
+        elif len(lastSpot) > 2:
+            if difference(lastSpot[-2], lastSpot[-3]) >= 2 and difference(lastSpot[-1], lastSpot[-2]) < 2:
+                prediction = True
+                hitPoints = []
+                shotIndex += 1
+        
+        
+        if prediction:
+            hitPoint = getHitPoint(taco, cueBall, averageRadius, hitPoints)
+            shotPrediction(hitPoint, cueBall, coloredBalls, holes)
     #finalImg = stackImages(0.8, [imgCropped, taco])
     cv2.imshow("Result", imgRaw)
     result.write(imgRaw)
