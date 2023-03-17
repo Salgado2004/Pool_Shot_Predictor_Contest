@@ -33,7 +33,7 @@ def findHoles():
         [15, 40, 65, 85],
         [372, 35, 412, 75],
         [725, 39, 795, 78],
-        [25, 372, 69, 408],
+        [25, 372, 74, 408],
         [377, 376, 420, 413],
         [725, 368, 795, 410]
     ]
@@ -125,16 +125,16 @@ def findColoredBalls(img):
                     if h > 15 and h < 38 and w > 15 and w < 38 and (w-h) > -7 and (w-h) < 7:
                         ballCount += 1
                         foundBalls.append([x, y, w, h])
-                        if w//2 > 15:
-                            w = 15
                         cv2.circle(f_img, (x+w//2,y+h//2), (w//2), (255,255,0), 2)
                         cv2.putText(f_img, "Bola", (x+(w//2)-10, y+(h//2)-10), cv2.FONT_HERSHEY_COMPLEX, 0.8,  (255,255,255), 1)
         cv2.putText(f_img, f"Ball count: {ballCount}", (15, 25), cv2.FONT_HERSHEY_SIMPLEX, 0.9,  (255,255,255), 2)
         if ballCount == 1:
-            x, y, w, h = foundBalls[0][0], foundBalls[0][1], foundBalls[0][2], foundBalls[0][3]
+            x, y, w, h, r = foundBalls[0][0], foundBalls[0][1], foundBalls[0][2], foundBalls[0][3], (foundBalls[0][2]//2 + foundBalls[0][3]//2)//2
+            if r >= 15:
+                r = 14
             cv2.putText(imgCropped, "Bola", (x+(w//2)+28, y+(h//2)+88), cv2.FONT_HERSHEY_SIMPLEX, 0.4,  (0,0,255), 1)
-            return [x+38, y+110, w, h]
-    coloredBalls = stackImages(0.46, [[filteredImgs[0], filteredImgs[1], filteredImgs[2], filteredImgs[3]], [filteredImgs[4], filteredImgs[5], filteredImgs[6], filteredImgs[7]]])
+            return [x+38, y+110, w, h, r]
+    #coloredBalls = stackImages(0.46, [[filteredImgs[0], filteredImgs[1], filteredImgs[2], filteredImgs[3]], [filteredImgs[4], filteredImgs[5], filteredImgs[6], filteredImgs[7]]])
     #return coloredBalls
 
 # Function to detect the point of the cue that hits the ball
@@ -172,6 +172,8 @@ def getHitPoint(taco, cueBall, averageRadius, hitPoints):
         sumX += point[0]
         sumY += point[1]
     hitPoint = [sumX//len(hitPoints), sumY//len(hitPoints)]
+
+    cv2.circle(imgCropped, (hitPoint[0], hitPoint[1]), 2, (150,0,150), cv2.FILLED)
     return hitPoint
 
 # Function to draw the result on the image
@@ -232,7 +234,7 @@ def detectCollision(cueBall, coloredBall):
         pY = int(seno*radius)
         cueBallList.append([oX+pX, oY+pY])
 
-    radius = (coloredBall[2]-coloredBall[0])//2
+    radius = coloredBall[4]
     oX = coloredBall[0]+(coloredBall[2]-coloredBall[0])//2
     oY = coloredBall[1]+(coloredBall[3]-coloredBall[1])//2
     for ang in range(0, 360):
@@ -312,6 +314,8 @@ def pathPrediction(collisionPoint, coloredBall, paths, holes):
 # Control all the calculations used for the prediction
 def shotPrediction(hitPoint, cueBall, coloredBalls, holes):
     try:
+        cv2.circle(imgCropped, (coloredBalls[0]+coloredBalls[2]//2, coloredBalls[1]+coloredBalls[3]//2), coloredBalls[4], (100,0,100), 2)
+        cv2.putText(imgCropped, f"{coloredBalls[4]}", (coloredBalls[0]+coloredBalls[2]//2, coloredBalls[1]+coloredBalls[3]//2), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (244, 233, 234), 1)
         #Cue ball to colored ball
         m1, n1 = lineEquation([hitPoint[0], hitPoint[1]], [cueBall[0]+cueBall[2]//2, cueBall[1]+cueBall[3]//2])
         
@@ -328,7 +332,7 @@ def shotPrediction(hitPoint, cueBall, coloredBalls, holes):
 
         for point in points:
             bbox = [point[0]-cueBall[2]//2, point[1]-cueBall[3]//2, point[0]+cueBall[2]//2, point[1]+cueBall[3]//2,]
-            collision, collisionPoint = detectCollision(bbox, [coloredBalls[0],coloredBalls[1], coloredBalls[0]+coloredBalls[2], coloredBalls[1]+coloredBalls[3]])
+            collision, collisionPoint = detectCollision(bbox, [coloredBalls[0],coloredBalls[1], coloredBalls[0]+coloredBalls[2], coloredBalls[1]+coloredBalls[3], coloredBalls[4]])
             if collision:
                 x1, y1 = collisionPoint[0], collisionPoint[1]
                 paths = [[coloredBalls[0]+coloredBalls[2]//2, coloredBalls[1]+coloredBalls[3]//2]]
@@ -398,7 +402,7 @@ while True:
                         count = possibleOutcomes.count(outcome)
                         mostLikely = outcome
 
-            print(mostLikely, count)
+            print("Most likely: ", mostLikely, count)
             drawResult(mostLikely['paths'], mostLikely['color'], mostLikely['prediction'], True, (count/len(possibleOutcomes))*100)
 
             cv2.putText(imgRaw, f"Bola em movimento", (10,25), cv2.FONT_HERSHEY_PLAIN, 1.3, (0,0,0), 2)
