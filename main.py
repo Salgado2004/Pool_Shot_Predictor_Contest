@@ -348,7 +348,6 @@ def shotPrediction(hitPoint, cueBall, coloredBalls, holes):
                     else:
                         dottedLine(imgCropped, (paths[i-1][0], paths[i-1][1]), (path[0], path[1]),  color)
                         cv2.circle(imgCropped, (path[0], path[1]), 10, color, cv2.FILLED)
-                        cv2.putText(imgCropped, f"{path[0]}, {path[1]}",(path[0]+10, path[1]-10), cv2.FONT_HERSHEY_PLAIN, 0.8, (0,0,0), 1)
                     if inHole:
                         cv2.rectangle(imgCropped, (80, 395), (280,440), color, cv2.FILLED)
                         cv2.putText(imgCropped, "Prediction: In", (85, 425), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (200,200,200), 2)
@@ -367,9 +366,6 @@ def shotPrediction(hitPoint, cueBall, coloredBalls, holes):
 
                 return {"prediction": inHole, "paths": paths, "color": color}
 
-        dottedLine(imgCropped, (cueBall[0]+cueBall[2]//2, cueBall[1]+cueBall[3]//2), (x1, y1), (200,200,200))
-        cv2.circle(imgCropped, (x1, y1), 5, (200,200,200), cv2.FILLED)
-
     except TypeError:
         pass
 
@@ -386,6 +382,8 @@ averageRadius = []
 lastSpot = []
 prediction = True
 possibleOutcomes = []
+frameId = 1
+firstFrame = 1
 
 shotIndex = 1
 while True:
@@ -408,8 +406,9 @@ while True:
             lastSpot.append([cueBall[0]+cueBall[2]//2, cueBall[1]+cueBall[3]//2])
 
         difference = lambda a, b : math.sqrt(math.pow(a[0]-b[0], 2)+math.pow(a[1]-b[1], 2))
-        if difference(lastSpot[-1], lastSpot[-2]) >= 2:
+        if difference(lastSpot[-1], lastSpot[-2]) >= 2 or frameId >= 1160:
             prediction = False
+            firstFrame = frameId
             mostLikely = {}
             count = 0
             for outcome in possibleOutcomes:
@@ -427,15 +426,17 @@ while True:
                 else:
                     dottedLine(imgCropped, (mostLikely['paths'][i-1][0], mostLikely['paths'][i-1][1]), (path[0], path[1]),  mostLikely['color'])
                     cv2.circle(imgCropped, (path[0], path[1]), 10, mostLikely['color'], cv2.FILLED)
-                    cv2.putText(imgCropped, f"{path[0]}, {path[1]}",(path[0]+10, path[1]-10), cv2.FONT_HERSHEY_PLAIN, 0.8, (0,0,0), 1)
                 if mostLikely['prediction']:
-                    cv2.rectangle(imgCropped, (80, 395), (280,440), mostLikely['color'], cv2.FILLED)
+                    cv2.rectangle(imgCropped, (80, 395), (280,450), mostLikely['color'], cv2.FILLED)
                     cv2.putText(imgCropped, "Prediction: In", (85, 425), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (200,200,200), 2)
+                    cv2.putText(imgCropped, f"Accuracy: {(count/len(possibleOutcomes))*100:.2f}%", (85, 444), cv2.FONT_HERSHEY_PLAIN, 1, (200,200,200), 1)
                 else:
-                    cv2.rectangle(imgCropped, (80, 395), (280,440), mostLikely['color'], cv2.FILLED)
+                    cv2.rectangle(imgCropped, (80, 395), (280,450), mostLikely['color'], cv2.FILLED)
                     cv2.putText(imgCropped, "Prediction: Out", (85, 425), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (200,200,200), 2)
+                    cv2.putText(imgCropped, f"Accuracy: {(count/len(possibleOutcomes))*100:.2f}%", (85, 444), cv2.FONT_HERSHEY_PLAIN, 1, (200,200,200), 1)
 
-            cv2.putText(imgRaw, f"Bola em movimento - Tacada {shotIndex}/10", (10,25), cv2.FONT_HERSHEY_PLAIN, 1.3, (0,0,0), 2)
+            cv2.putText(imgRaw, f"Bola em movimento", (10,25), cv2.FONT_HERSHEY_PLAIN, 1.3, (0,0,0), 2)
+            
         elif len(lastSpot) > 2:
             if difference(lastSpot[-2], lastSpot[-3]) >= 2 and difference(lastSpot[-1], lastSpot[-2]) < 2:
                 prediction = True
@@ -447,6 +448,23 @@ while True:
             hitPoint = getHitPoint(taco, cueBall, averageRadius, hitPoints)
             resultado = shotPrediction(hitPoint, cueBall, coloredBalls, holes)
             possibleOutcomes.append(resultado)
+    elif not(prediction):
+        for i, path in enumerate(mostLikely['paths']):
+           if i == 0:
+               pass
+           else:
+               dottedLine(imgCropped, (mostLikely['paths'][i-1][0], mostLikely['paths'][i-1][1]), (path[0], path[1]),  mostLikely['color'])
+               cv2.circle(imgCropped, (path[0], path[1]), 10, mostLikely['color'], cv2.FILLED)
+           if mostLikely['prediction']:
+               cv2.rectangle(imgCropped, (80, 395), (280,450), mostLikely['color'], cv2.FILLED)
+               cv2.putText(imgCropped, "Prediction: In", (85, 425), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (200,200,200), 2)
+               cv2.putText(imgCropped, f"Accuracy: {(count/len(possibleOutcomes))*100:.2f}%", (85, 444), cv2.FONT_HERSHEY_PLAIN, 1, (200,200,200), 1)
+           else:
+               cv2.rectangle(imgCropped, (80, 395), (280,450), mostLikely['color'], cv2.FILLED)
+               cv2.putText(imgCropped, "Prediction: Out", (85, 425), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (200,200,200), 2)
+               cv2.putText(imgCropped, f"Accuracy: {(count/len(possibleOutcomes))*100:.2f}%", (85, 444), cv2.FONT_HERSHEY_PLAIN, 1, (200,200,200), 1)
+
+    frameId +=1
     #finalImg = stackImages(0.8, [imgCropped, taco])
     cv2.imshow("Result", imgRaw)
     result.write(imgRaw)
