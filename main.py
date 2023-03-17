@@ -2,37 +2,7 @@ import cv2
 import math
 import numpy as np
 
-def stackImages(scale,imgArray):
-    rows = len(imgArray)
-    cols = len(imgArray[0])
-    rowsAvailable = isinstance(imgArray[0], list)
-    width = imgArray[0][0].shape[1]
-    height = imgArray[0][0].shape[0]
-    if rowsAvailable:
-        for x in range ( 0, rows):
-            for y in range(0, cols):
-                if imgArray[x][y].shape[:2] == imgArray[0][0].shape [:2]:
-                    imgArray[x][y] = cv2.resize(imgArray[x][y], (0, 0), None, scale, scale)
-                else:
-                    imgArray[x][y] = cv2.resize(imgArray[x][y], (imgArray[0][0].shape[1], imgArray[0][0].shape[0]), None, scale, scale)
-                if len(imgArray[x][y].shape) == 2: imgArray[x][y]= cv2.cvtColor( imgArray[x][y], cv2.COLOR_GRAY2BGR)
-        imageBlank = np.zeros((height, width, 3), np.uint8)
-        hor = [imageBlank]*rows
-        hor_con = [imageBlank]*rows
-        for x in range(0, rows):
-            hor[x] = np.hstack(imgArray[x])
-        ver = np.vstack(hor)
-    else:
-        for x in range(0, rows):
-            if imgArray[x].shape[:2] == imgArray[0].shape[:2]:
-                imgArray[x] = cv2.resize(imgArray[x], (0, 0), None, scale, scale)
-            else:
-                imgArray[x] = cv2.resize(imgArray[x], (imgArray[0].shape[1], imgArray[0].shape[0]), None,scale, scale)
-            if len(imgArray[x].shape) == 2: imgArray[x] = cv2.cvtColor(imgArray[x], cv2.COLOR_GRAY2BGR)
-        hor= np.hstack(imgArray)
-        ver = hor
-    return ver
-
+# General funcions
 def getCosSin(deg):
     angulo = math.radians(deg)
     seno = math.sin(angulo)
@@ -40,7 +10,6 @@ def getCosSin(deg):
 
     if cosseno == 6.123233995736766e-17:
         cosseno = 0
-
     if seno == 6.123233995736766e-17:
         seno = 0
 
@@ -288,7 +257,7 @@ def detectCollision(cueBall, coloredBall):
         return True, collisionPt
     return False, []
 
-# Predicts if the colored ball will go in the hole or bounce in the wall
+# Predicts if the colored ball will go in the hole
 def bouncePrediction(point, radius, holes):
     color = (0,0,200)
     inHole = False
@@ -311,6 +280,7 @@ def pathPrediction(collisionPoint, coloredBall, paths, holes):
     else:
         last_x = 790
 
+    # Test if the ball will hit the walls
     for i in range(0,2):
         x2 = last_x
         y2 = int((m2*x2)+n2)
@@ -449,10 +419,12 @@ while True:
         drawResult(mostLikely['paths'], mostLikely['color'], mostLikely['prediction'], True, (count/len(possibleOutcomes))*100)
 
     frameId +=1
-    #finalImg = stackImages(0.8, [imgCropped, taco])
+
+    # Write video
     cv2.imshow("Result", imgRaw)
     result.write(imgRaw)
     if cv2.waitKey(75) & 0xFF == ord('q'):
         break
 
+# Save video
 result.release()
