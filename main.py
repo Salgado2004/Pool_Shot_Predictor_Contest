@@ -269,6 +269,7 @@ def detectCollision(cueBall, coloredBall):
         return True, collisionPt
     return False, []
 
+# Predicts if the colored ball will go in the hole or bounce in the wall
 def bouncePrediction(point, radius, holes):
     color = (0,0,200)
     inHole = False
@@ -280,6 +281,7 @@ def bouncePrediction(point, radius, holes):
 
     return color, inHole
 
+# Predicts the direction the colored ball will go
 def pathPrediction(collisionPoint, coloredBall, paths, holes):
     # Colored ball path
     ballCenter = [coloredBall[0]+coloredBall[2]//2, coloredBall[1]+coloredBall[3]//2]
@@ -359,6 +361,7 @@ def shotPrediction(hitPoint, cueBall, coloredBalls, holes):
                 print("Taco: ", hitPoint)
                 print("Bola colorida: ", coloredBalls)
                 print("Ponto de colisão: ", collisionPoint)
+                print("Caminhos: ", paths)
                 print("Resultado: ", inHole)
                 print("\n")
                 dottedLine(imgCropped, (cueBall[0]+cueBall[2]//2, cueBall[1]+cueBall[3]//2), (x1, y1), (200,200,200))
@@ -383,7 +386,6 @@ lastSpot = []
 prediction = True
 possibleOutcomes = []
 frameId = 1
-firstFrame = 1
 
 shotIndex = 1
 while True:
@@ -408,7 +410,6 @@ while True:
         difference = lambda a, b : math.sqrt(math.pow(a[0]-b[0], 2)+math.pow(a[1]-b[1], 2))
         if difference(lastSpot[-1], lastSpot[-2]) >= 2 or frameId >= 1160:
             prediction = False
-            firstFrame = frameId
             mostLikely = {}
             count = 0
             for outcome in possibleOutcomes:
@@ -445,6 +446,7 @@ while True:
                 shotIndex += 1
         
         if prediction:
+            print("\nTacada: ", shotIndex)
             hitPoint = getHitPoint(taco, cueBall, averageRadius, hitPoints)
             resultado = shotPrediction(hitPoint, cueBall, coloredBalls, holes)
             possibleOutcomes.append(resultado)
