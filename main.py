@@ -27,7 +27,7 @@ def imgProcessing(img):
     imgCanny = cv2.Canny(imgBlur, 50, 50)
     return imgCanny
 
-# Function to calculate the position of the holes
+# Function to get the position of the holes
 def findHoles():
     holes = [
         [15, 40, 65, 85],
@@ -41,6 +41,7 @@ def findHoles():
 
 # Function to find the position of the cue 
 def findTaco(img):
+    # Processing
     croppedImg = img[90:, :]
     lower = np.array([77,44,159])
     upper = np.array([100,89,213])
@@ -49,6 +50,7 @@ def findTaco(img):
     imgProcessed = imgProcessing(imgFiltered)
     dial = cv2.dilate(imgProcessed, kernel, iterations=1)
     thres = cv2.erode(dial, kernel, iterations=1)
+    # Find contours
     contours, hierarchy = cv2.findContours(thres, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
     maxArea = -1
     taco = []
@@ -63,6 +65,7 @@ def findTaco(img):
             cv2.putText(imgFiltered, f"{w}, {h}" ,(x+w//2, y+h//2-10),cv2.FONT_HERSHEY_COMPLEX, 0.7, (255,255,255), 1)
             cv2.putText(imgFiltered, f"{area}" ,(x+w//2, y+h//2+15),cv2.FONT_HERSHEY_COMPLEX, 0.7, (255,255,255), 1)
             if objCor > 2:
+                # Find the cue
                 if w < 18 and w > 5 and h < 18 and h > 5:
                     if area > maxArea:
                         maxArea = area
@@ -75,11 +78,13 @@ def findTaco(img):
 
 # Function to find the position of the cue ball
 def findCueBall(img):
+    # Processing
     croppedImg = img[56:383, 38:757]
     lower = np.array([40,9,107])
     upper = np.array([72,96,210])
     imgFiltered = colorFilter(croppedImg, lower, upper)
     imgProcessed = imgProcessing(imgFiltered)
+    # Find the contours
     contours, hierarchy = cv2.findContours(imgProcessed, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
     for i in contours:
         area = cv2.contourArea(i)
@@ -89,14 +94,17 @@ def findCueBall(img):
             approx = cv2.approxPolyDP(i, 0.02*peri, True)
             objCor = len(approx)
             x, y, w, h = cv2.boundingRect(approx)
+            # Find the ball
             if objCor >= 8:
                 cv2.putText(imgCropped, "Bola branca", (x+(w//2)+40, y+(h//2)+61), cv2.FONT_HERSHEY_SIMPLEX, 0.4,  (255,255,255), 1)
                 return [x+38, y+56, w, h]
 
 # Function to find the position of the colored balls
 def findColoredBalls(img):
+    # Processing
     croppedImg = img[110:375, 38:770]
     kernel = np.ones((5,5),np.uint8)
+    # Define HSV filters
     lowerValues = [[13,133,132], [74, 33, 71], [61, 36, 70], [82, 71, 72], [0, 98, 70], [61, 36, 70], [120,53,116], [0, 0, 0]]
     upperValues = [[66,255,255], [123, 255, 255], [79, 232, 255], [125, 255, 255], [17, 255, 255], [79, 232, 255], [179,255,255], [179, 255, 255]]
     filteredImgs = []
@@ -110,6 +118,7 @@ def findColoredBalls(img):
         foundBalls = []
         dial = cv2.dilate(imgProcessed, kernel, iterations=1)
         thres = cv2.erode(dial, kernel, iterations=1)
+        # Find the countors
         contours, hierarchy = cv2.findContours(thres, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
         for i in contours:
             area = cv2.contourArea(i)
@@ -120,6 +129,7 @@ def findColoredBalls(img):
                 objCor = len(approx)
                 x, y, w, h = cv2.boundingRect(approx)
                 if objCor > 7 and objCor < 14:
+                    # Find the colored balls
                     #cv2.putText(f_img, f"{w}", (x, y-15), cv2.FONT_HERSHEY_TRIPLEX, 0.9, (255,255,255), 1)
                     #cv2.putText(f_img, f"{h}", (x+w, y+(h//2)+15), cv2.FONT_HERSHEY_TRIPLEX, 0.9, (255,255,255), 1)
                     if h > 15 and h < 38 and w > 15 and w < 38 and (w-h) > -7 and (w-h) < 7:
@@ -354,6 +364,7 @@ def shotPrediction(hitPoint, cueBall, coloredBalls, holes):
     except TypeError:
         pass
 
+# Initialize variables
 cap = cv2.VideoCapture("resources/shots.mp4")
 frameWidth = 960
 frameHeight = 540
@@ -370,6 +381,8 @@ possibleOutcomes = []
 frameId = 1
 
 shotIndex = 1
+
+# Start program
 while True:
     success, frame = cap.read()
     imgRaw = cv2.resize(frame, (frameWidth, frameHeight))
