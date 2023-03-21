@@ -150,9 +150,17 @@ def findColoredBalls(img):
 # Function to detect the point of the cue that hits the ball
 def getHitPoint(taco, cueBall, averageRadius, hitPoints):
     tacoPoints = []
+    cueBallPoints = []
     hitPoint = []
+
+    radius = (cueBall[2]//2+cueBall[3]//2)//2
     cueBallX = cueBall[0]+cueBall[2]//2
     cueBallY = cueBall[1]+cueBall[3]//2
+    for ang in range(0, 360):
+        seno, cosseno = getCosSin(ang)
+        pX = int(cosseno*radius)
+        pY = int(seno*radius)
+        cueBallPoints.append([cueBallX+pX, cueBallY+pY])
 
     averageRadius.append((taco[2]//2+taco[3]//2)//2)
     radius = 0
@@ -169,11 +177,12 @@ def getHitPoint(taco, cueBall, averageRadius, hitPoints):
         tacoPoints.append([oX+pX, oY+pY])
 
     minDistance = 1000000
-    for point in tacoPoints:
-        distance = math.sqrt(math.pow(cueBallX-point[0], 2) + math.pow(cueBallY-point[1], 2))
-        if distance < minDistance:
-            minDistance = distance
-            hitPoint = point
+    for t_point in tacoPoints:
+        for c_point in cueBallPoints:
+            distance = math.sqrt(math.pow(c_point[0]-t_point[0], 2) + math.pow(c_point[1]-t_point[1], 2))
+            if distance < minDistance:
+                minDistance = distance
+                hitPoint = t_point
 
     hitPoints.append(hitPoint)
     sumX = 0
@@ -183,7 +192,6 @@ def getHitPoint(taco, cueBall, averageRadius, hitPoints):
         sumY += point[1]
     hitPoint = [sumX//len(hitPoints), sumY//len(hitPoints)]
 
-    cv2.circle(imgCropped, (hitPoint[0], hitPoint[1]), 2, (150,0,150), cv2.FILLED)
     return hitPoint
 
 # Function to draw the result on the image
@@ -324,8 +332,6 @@ def pathPrediction(collisionPoint, coloredBall, paths, holes):
 # Control all the calculations used for the prediction
 def shotPrediction(hitPoint, cueBall, coloredBalls, holes):
     try:
-        cv2.circle(imgCropped, (coloredBalls[0]+coloredBalls[2]//2, coloredBalls[1]+coloredBalls[3]//2), coloredBalls[4], (100,0,100), 2)
-        cv2.putText(imgCropped, f"{coloredBalls[4]}", (coloredBalls[0]+coloredBalls[2]//2, coloredBalls[1]+coloredBalls[3]//2), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (244, 233, 234), 1)
         #Cue ball to colored ball
         m1, n1 = lineEquation([hitPoint[0], hitPoint[1]], [cueBall[0]+cueBall[2]//2, cueBall[1]+cueBall[3]//2])
         
@@ -370,7 +376,7 @@ frameWidth = 960
 frameHeight = 540
 size = (frameWidth, frameHeight)
 
-result = cv2.VideoWriter('resources/shotsProcessed.mp4', cv2.VideoWriter_fourcc(*'mp4v'), 10, size)
+result = cv2.VideoWriter('resources/shotsProcessed.mp4', cv2.VideoWriter_fourcc(*'mp4v'), 20, size)
 
 holes = findHoles()
 hitPoints = []
