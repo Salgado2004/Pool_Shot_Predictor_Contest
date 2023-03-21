@@ -150,17 +150,9 @@ def findColoredBalls(img):
 # Function to detect the point of the cue that hits the ball
 def getHitPoint(taco, cueBall, averageRadius, hitPoints):
     tacoPoints = []
-    cueBallPoints = []
     hitPoint = []
-
-    radius = (cueBall[2]//2+cueBall[3]//2)//2
     cueBallX = cueBall[0]+cueBall[2]//2
     cueBallY = cueBall[1]+cueBall[3]//2
-    for ang in range(0, 360):
-        seno, cosseno = getCosSin(ang)
-        pX = int(cosseno*radius)
-        pY = int(seno*radius)
-        cueBallPoints.append([cueBallX+pX, cueBallY+pY])
 
     averageRadius.append((taco[2]//2+taco[3]//2)//2)
     radius = 0
@@ -174,15 +166,14 @@ def getHitPoint(taco, cueBall, averageRadius, hitPoints):
         seno, cosseno = getCosSin(ang)
         pX = int(cosseno*radius)
         pY = int(seno*radius)
-        tacoPoints.append([oX+pX, oY+pY])
+        tacoPoints.append([oX+pX, oY+pY]) 
 
     minDistance = 1000000
     for t_point in tacoPoints:
-        for c_point in cueBallPoints:
-            distance = math.sqrt(math.pow(c_point[0]-t_point[0], 2) + math.pow(c_point[1]-t_point[1], 2))
-            if distance < minDistance:
-                minDistance = distance
-                hitPoint = t_point
+        distance = math.sqrt(math.pow(cueBallX-t_point[0], 2) + math.pow(cueBallY-t_point[1], 2))
+        if distance < minDistance:
+            minDistance = distance
+            hitPoint = t_point
 
     hitPoints.append(hitPoint)
     sumX = 0
