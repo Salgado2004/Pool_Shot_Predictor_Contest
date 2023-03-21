@@ -9,8 +9,8 @@
 <b>** If you like this project, please vote for me in <a href="https://www.computervision.zone/pool-shot-predictor/">https://www.computervision.zone/pool-shot-predictor/</a></b> 
 
 <h2>Result samples</h2>
-<img src="https://user-images.githubusercontent.com/53799801/224831863-aa5f6abf-7909-40d6-a720-21d9930204f4.png"><br>
-<img src="https://user-images.githubusercontent.com/53799801/225056823-8d502def-8b5b-4a02-a457-fb980c2a36d1.png"><br>
+<img src="https://user-images.githubusercontent.com/53799801/226636165-55f0aef3-b3c6-404c-b421-a3ddb2233ac7.png"><br>
+<img src="https://user-images.githubusercontent.com/53799801/226637523-9b5d2650-454e-4213-adf7-c215971ab9e4.png"><br>
 
 
 <b>** If you like this project, please vote for me in <a href="https://www.computervision.zone/pool-shot-predictor/">https://www.computervision.zone/pool-shot-predictor/</a></b> 
