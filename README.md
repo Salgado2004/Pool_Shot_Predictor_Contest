@@ -6,14 +6,13 @@
 
 <p align="justify">It has been defined labels in front of the objects, to help me understand what the program was detecting during the development. Later on, I decided to keep them just for style.</p>
 
-<b>** If you like this project, please vote for me in <a href="https://www.computervision.zone/pool-shot-predictor/">https://www.computervision.zone/pool-shot-predictor/</a></b> 
-
 <h2>Result samples</h2>
 <img src="https://user-images.githubusercontent.com/53799801/226636165-55f0aef3-b3c6-404c-b421-a3ddb2233ac7.png"><br>
 <img src="https://user-images.githubusercontent.com/53799801/226637523-9b5d2650-454e-4213-adf7-c215971ab9e4.png"><br>
 
-
-<b>** If you like this project, please vote for me in <a href="https://www.computervision.zone/pool-shot-predictor/">https://www.computervision.zone/pool-shot-predictor/</a></b> 
+<h2>Contest winners</h2>
+<img src="https://user-images.githubusercontent.com/53799801/236886964-5f481b0b-7484-4676-92a5-ded543ac0242.png" width="50%"><br>
+<p align="justify">I would like to thank everyone who voted for me and this project, and also CV Zone for hosting this contest and giving me the opportunity to learn and test my skills. I promise to keep studying and learning to create better solutions in the field of computer vision.</p>
 
 <h2>&copy; Leonardo Salgado</h2>
 <img src="https://user-images.githubusercontent.com/53799801/224312217-dd02b5af-a6b4-45e6-b1df-db3f0b9dc702.png"><br>
